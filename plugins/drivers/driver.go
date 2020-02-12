@@ -158,6 +158,12 @@ type Capabilities struct {
 
 	// MountConfigs tells Nomad which mounting config options the driver supports.
 	MountConfigs MountConfigSupport
+
+	// RemoteTasks indicates this driver runs tasks on remote systems
+	// instead of locally. The Nomad client and servers can use this
+	// information to adjust behavior such as propogating task handles
+	// between allocations to avoid downtime when a client is lost.
+	RemoteTasks bool
 }
 
 func (c *Capabilities) HasNetIsolationMode(m NetIsolationMode) bool {
