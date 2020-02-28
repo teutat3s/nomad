@@ -7264,6 +7264,29 @@ type AllocState struct {
 	Time  time.Time
 }
 
+// TaskHandle is an optional handle to a task propogated to the servers for use
+// by remote tasks.
+//
+//  Minimal set of fields from plugins/drivers/task_handle.go:TaskHandle
+//FIXME(schmichael) is the right name? right fields? go back to serializing it?
+type TaskHandle struct {
+	Version     int
+	DriverState []byte
+}
+
+func (h *TaskHandle) Copy() *TaskHandle {
+	if h == nil {
+		return nil
+	}
+
+	ds := make([]byte, len(h.DriverState))
+	copy(ds, h.DriverState)
+	return &TaskHandle{
+		Version:     h.Version,
+		DriverState: ds,
+	}
+}
+
 // Set of possible states for a task.
 const (
 	TaskStatePending = "pending" // The task is waiting to be run.
@@ -7301,7 +7324,7 @@ type TaskState struct {
 	// TaskHandle is the encoded version of drivers.TaskHandle if a task
 	// wishes to propagate its handle to the server (as is the case with
 	// RemoteTasks).
-	TaskHandle []byte
+	TaskHandle *TaskHandle
 }
 
 // NewTaskState returns a TaskState initialized in the Pending state.
@@ -7333,10 +7356,7 @@ func (ts *TaskState) Copy() *TaskState {
 		}
 	}
 
-	if newTS.TaskHandle != nil {
-		newTS.TaskHandle = make([]byte, len(ts.TaskHandle))
-		copy(newTS.TaskHandle, ts.TaskHandle)
-	}
+	newTS.TaskHandle = ts.TaskHandle.Copy()
 	return newTS
 }
 

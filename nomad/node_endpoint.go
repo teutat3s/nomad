@@ -1113,6 +1113,13 @@ func (n *Node) UpdateAlloc(args *structs.AllocUpdateRequest, reply *structs.Gene
 		taskGroup := job.LookupTaskGroup(alloc.TaskGroup)
 		if taskGroup == nil {
 			continue
+
+		for task, state := range allocToUpdate.TaskStates {
+			ds := "<none>"
+			if state.TaskHandle != nil {
+				ds = string(state.TaskHandle.DriverState)
+			}
+			n.logger.Info("-----> UpdateAlloc()", "alloc", alloc.ID, "task_name", task, "driver_state", ds)
 		}
 
 		// Add an evaluation if this is a failed alloc that is eligible for rescheduling
