@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/nomad/nomad/structs"
 	bstructs "github.com/hashicorp/nomad/plugins/base/structs"
 	"github.com/hashicorp/nomad/plugins/drivers"
-	"github.com/kr/pretty"
 )
 
 const (
@@ -461,11 +460,6 @@ func (tr *TaskRunner) Run() {
 	tr.stateLock.RLock()
 	dead := tr.state.State == structs.TaskStateDead
 	tr.stateLock.RUnlock()
-
-	//FIXME(schmichael) Where best to opporunistically load task handle
-	//from state? Must be after initDriver (in NewTaskRunner).
-	// Load existing task handle
-	tr.loadTaskHandle()
 
 	// if restoring a dead task, ensure that task is cleared and all post hooks
 	// are called without additional state updates
