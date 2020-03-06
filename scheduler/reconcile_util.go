@@ -40,6 +40,9 @@ type placementResult interface {
 	DowngradeNonCanary() bool
 
 	MinJobVersion() uint64
+
+	// PreviousLost is true if the previous allocation was lost.
+	PreviousLost() bool
 }
 
 // allocStopResult contains the information required to stop a single allocation
@@ -61,6 +64,8 @@ type allocPlaceResult struct {
 
 	downgradeNonCanary bool
 	minJobVersion      uint64
+
+	lost bool
 }
 
 func (a allocPlaceResult) TaskGroup() *structs.TaskGroup           { return a.taskGroup }
@@ -71,6 +76,7 @@ func (a allocPlaceResult) IsRescheduling() bool                    { return a.re
 func (a allocPlaceResult) StopPreviousAlloc() (bool, string)       { return false, "" }
 func (a allocPlaceResult) DowngradeNonCanary() bool                { return a.downgradeNonCanary }
 func (a allocPlaceResult) MinJobVersion() uint64                   { return a.minJobVersion }
+func (a allocPlaceResult) PreviousLost() bool                      { return a.lost }
 
 // allocDestructiveResult contains the information required to do a destructive
 // update. Destructive changes should be applied atomically, as in the old alloc
@@ -87,6 +93,7 @@ func (a allocDestructiveResult) Name() string                            { retur
 func (a allocDestructiveResult) Canary() bool                            { return false }
 func (a allocDestructiveResult) PreviousAllocation() *structs.Allocation { return a.stopAlloc }
 func (a allocDestructiveResult) IsRescheduling() bool                    { return false }
+func (a allocDestructiveResult) PreviousLost() bool                      { return false }
 func (a allocDestructiveResult) StopPreviousAlloc() (bool, string) {
 	return true, a.stopStatusDescription
 }

@@ -398,6 +398,7 @@ func (a *allocReconciler) computeGroup(group string, all allocSet) bool {
 
 	// Create a structure for choosing names. Seed with the taken names which is
 	// the union of untainted and migrating nodes (includes canaries)
+	//FIXME(schmichael) does untainted need to include lost in its union now that lost allocs are replaced directly?
 	nameIndex := newAllocNameIndex(a.jobID, group, tg.Count, untainted.union(migrate, rescheduleNow))
 
 	// Stop any unneeded allocations and update the untainted set to not
@@ -718,14 +719,14 @@ func (a *allocReconciler) computePlacements(group *structs.TaskGroup,
 	var place []allocPlaceResult
 	for _, alloc := range reschedule {
 		place = append(place, allocPlaceResult{
-			name:          alloc.Name,
-			taskGroup:     group,
-			previousAlloc: alloc,
-			reschedule:    true,
-			canary:        alloc.DeploymentStatus.IsCanary(),
-
+			name:               alloc.Name,
+			taskGroup:          group,
+			previousAlloc:      alloc,
+			reschedule:         true,
+			canary:             alloc.DeploymentStatus.IsCanary(),
 			downgradeNonCanary: canaryState && !alloc.DeploymentStatus.IsCanary(),
 			minJobVersion:      alloc.Job.Version,
+			lost:               false,
 		})
 	}
 
@@ -738,6 +739,7 @@ func (a *allocReconciler) computePlacements(group *structs.TaskGroup,
 			previousAlloc: alloc,
 			reschedule:    false,
 			canary:        alloc.DeploymentStatus.IsCanary(),
+			lost:          true,
 		})
 	}
 
