@@ -56,6 +56,7 @@ func (d *driverPluginClient) Capabilities() (*Capabilities, error) {
 		caps.SendSignals = resp.Capabilities.SendSignals
 		caps.Exec = resp.Capabilities.Exec
 		caps.MustInitiateNetwork = resp.Capabilities.MustCreateNetwork
+		caps.RemoteTasks = resp.Capabilities.RemoteTasks
 
 		for _, mode := range resp.Capabilities.NetworkIsolationModes {
 			caps.NetIsolationModes = append(caps.NetIsolationModes, netIsolationModeFromProto(mode))
