@@ -5586,7 +5586,7 @@ func TestServiceSched_RunningWithNextAllocation(t *testing.T) {
 	h := NewHarness(t)
 
 	node1 := mock.Node()
-	require.NoError(t, h.State.UpsertNode(structs.MsgTypeTestSetup, h.NextIndex(), node1))
+	require.NoError(t, h.State.UpsertNode(h.NextIndex(), node1))
 
 	totalCount := 2
 	job := mock.Job()
@@ -5594,7 +5594,7 @@ func TestServiceSched_RunningWithNextAllocation(t *testing.T) {
 	job.Stable = true
 	job.TaskGroups[0].Count = totalCount
 	job.TaskGroups[0].Update = nil
-	require.NoError(t, h.State.UpsertJob(structs.MsgTypeTestSetup, h.NextIndex(), job))
+	require.NoError(t, h.State.UpsertJob(h.NextIndex(), job))
 
 	var allocs []*structs.Allocation
 	for i := 0; i < totalCount+1; i++ {
@@ -5609,13 +5609,13 @@ func TestServiceSched_RunningWithNextAllocation(t *testing.T) {
 	// simulate a case where .NextAllocation is set but alloc is still running
 	allocs[2].PreviousAllocation = allocs[0].ID
 	allocs[0].NextAllocation = allocs[2].ID
-	require.NoError(t, h.State.UpsertAllocs(structs.MsgTypeTestSetup, h.NextIndex(), allocs))
+	require.NoError(t, h.State.UpsertAllocs(h.NextIndex(), allocs))
 
 	// new update with new task group
 	job2 := job.Copy()
 	job2.Version = 1
 	job2.TaskGroups[0].Tasks[0].Config["command"] = "/bin/other"
-	require.NoError(t, h.State.UpsertJob(structs.MsgTypeTestSetup, h.NextIndex(), job2))
+	require.NoError(t, h.State.UpsertJob(h.NextIndex(), job2))
 
 	// Create a mock evaluation
 	eval := &structs.Evaluation{
@@ -5626,7 +5626,7 @@ func TestServiceSched_RunningWithNextAllocation(t *testing.T) {
 		JobID:       job.ID,
 		Status:      structs.EvalStatusPending,
 	}
-	require.NoError(t, h.State.UpsertEvals(structs.MsgTypeTestSetup, h.NextIndex(), []*structs.Evaluation{eval}))
+	require.NoError(t, h.State.UpsertEvals(h.NextIndex(), []*structs.Evaluation{eval}))
 
 	// Process the evaluation
 	err := h.Process(NewServiceScheduler, eval)
