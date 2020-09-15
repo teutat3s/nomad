@@ -5357,7 +5357,7 @@ func TestServiceSched_Migrate_NonCanary(t *testing.T) {
 	h := NewHarness(t)
 
 	node1 := mock.Node()
-	require.NoError(t, h.State.UpsertNode(structs.MsgTypeTestSetup, h.NextIndex(), node1))
+	require.NoError(t, h.State.UpsertNode(h.NextIndex(), node1))
 
 	job := mock.Job()
 	job.Stable = true
@@ -5366,7 +5366,7 @@ func TestServiceSched_Migrate_NonCanary(t *testing.T) {
 		MaxParallel: 1,
 		Canary:      1,
 	}
-	require.NoError(t, h.State.UpsertJob(structs.MsgTypeTestSetup, h.NextIndex(), job))
+	require.NoError(t, h.State.UpsertJob(h.NextIndex(), job))
 
 	deployment := &structs.Deployment{
 		ID:             uuid.Generate(),
@@ -5392,7 +5392,7 @@ func TestServiceSched_Migrate_NonCanary(t *testing.T) {
 	alloc.DesiredStatus = structs.AllocDesiredStatusRun
 	alloc.ClientStatus = structs.AllocClientStatusRunning
 	alloc.DesiredTransition.Migrate = helper.BoolToPtr(true)
-	require.NoError(t, h.State.UpsertAllocs(structs.MsgTypeTestSetup, h.NextIndex(), []*structs.Allocation{alloc}))
+	require.NoError(t, h.State.UpsertAllocs(h.NextIndex(), []*structs.Allocation{alloc}))
 
 	// Create a mock evaluation
 	eval := &structs.Evaluation{
@@ -5403,7 +5403,7 @@ func TestServiceSched_Migrate_NonCanary(t *testing.T) {
 		JobID:       job.ID,
 		Status:      structs.EvalStatusPending,
 	}
-	require.NoError(t, h.State.UpsertEvals(structs.MsgTypeTestSetup, h.NextIndex(), []*structs.Evaluation{eval}))
+	require.NoError(t, h.State.UpsertEvals(h.NextIndex(), []*structs.Evaluation{eval}))
 
 	// Process the evaluation
 	err := h.Process(NewServiceScheduler, eval)
