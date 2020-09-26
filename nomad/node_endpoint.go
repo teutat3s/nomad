@@ -1109,6 +1109,7 @@ func (n *Node) UpdateAlloc(args *structs.AllocUpdateRequest, reply *structs.Gene
 		taskGroup := job.LookupTaskGroup(alloc.TaskGroup)
 		if taskGroup == nil {
 			continue
+		}
 
 		for task, state := range allocToUpdate.TaskStates {
 			ds := "<none>"

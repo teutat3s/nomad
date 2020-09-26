@@ -1435,8 +1435,6 @@ func (tr *TaskRunner) loadTaskHandle() {
 	tr.stateLock.Unlock()
 
 	if th == nil {
-		//FIXME remove
-		tr.logger.Info("----> loadTaskHandle did NOT find a task handle", "state", pretty.Sprint(tr.state))
 		return
 	}
 
