@@ -163,7 +163,7 @@ def configureLinuxProvisioners(vmCfg)
 	return vmCfg
 end
 
-def configureProviders(vmCfg, cpus: "2", memory: "2048")
+def configureProviders(vmCfg, cpus: "4", memory: "8192")
 	vmCfg.vm.provider "virtualbox" do |v|
 		v.customize ["modifyvm", :id, "--cableconnected1", "on"]
 		v.memory = memory
