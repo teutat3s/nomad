@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 #
 
-LINUX_BASE_BOX = "bento/ubuntu-18.04"
+LINUX_BASE_BOX = "bento/ubuntu-16.04"
 FREEBSD_BASE_BOX = "freebsd/FreeBSD-11.3-STABLE"
 
 LINUX_IP_ADDRESS = "10.199.0.200"
@@ -163,7 +163,7 @@ def configureLinuxProvisioners(vmCfg)
 	return vmCfg
 end
 
-def configureProviders(vmCfg, cpus: "2", memory: "2048")
+def configureProviders(vmCfg, cpus: "4", memory: "8192")
 	vmCfg.vm.provider "virtualbox" do |v|
 		v.customize ["modifyvm", :id, "--cableconnected1", "on"]
 		v.memory = memory
