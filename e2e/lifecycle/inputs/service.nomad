@@ -156,5 +156,44 @@ EOT
       }
     }
 
+    task "poststop" {
+
+      lifecycle {
+        hook = "poststop"
+      }
+
+      driver = "docker"
+
+      config {
+        image   = "busybox:1"
+        command = "/bin/sh"
+        args    = ["local/poststop.sh"]
+      }
+
+      template {
+        data = <<EOT
+#!/bin/sh
+sleep 1
+touch ${NOMAD_ALLOC_DIR}/poststop-ran
+touch ${NOMAD_ALLOC_DIR}/poststop-running
+touch ${NOMAD_ALLOC_DIR}/poststop-started
+sleep 5
+
+if [ ! -f ${NOMAD_ALLOC_DIR}/init-ran ]; then exit 12; fi
+if [ ! -f ${NOMAD_ALLOC_DIR}/main-started ]; then exit 15; fi
+if [ -f ${NOMAD_ALLOC_DIR}/init-running ]; then exit 14; fi
+if [ -f ${NOMAD_ALLOC_DIR}/main-running ]; then exit 17; fi
+rm ${NOMAD_ALLOC_DIR}/poststop-running
+EOT
+
+        destination = "local/poststop.sh"
+      }
+
+      resources {
+        cpu    = 64
+        memory = 64
+      }
+    }
+
   }
 }
