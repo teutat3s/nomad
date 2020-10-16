@@ -3744,10 +3744,11 @@ func (c *ComparableResources) NetIndex(n *NetworkResource) int {
 const (
 	// JobTypeNomad is reserved for internal system tasks and is
 	// always handled by the CoreScheduler.
-	JobTypeCore    = "_core"
-	JobTypeService = "service"
-	JobTypeBatch   = "batch"
-	JobTypeSystem  = "system"
+	JobTypeCore     = "_core"
+	JobTypeService  = "service"
+	JobTypeBatch    = "batch"
+	JobTypeSystem   = "system"
+	JobTypeSysBatch = "sysbatch"
 )
 
 const (
@@ -4010,7 +4011,7 @@ func (j *Job) Validate() error {
 		mErr.Errors = append(mErr.Errors, errors.New("Job must be in a namespace"))
 	}
 	switch j.Type {
-	case JobTypeCore, JobTypeService, JobTypeBatch, JobTypeSystem:
+	case JobTypeCore, JobTypeService, JobTypeBatch, JobTypeSystem, JobTypeSysBatch:
 	case "":
 		mErr.Errors = append(mErr.Errors, errors.New("Missing job type"))
 	default:
