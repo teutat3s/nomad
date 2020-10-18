@@ -21,8 +21,13 @@ const (
 )
 
 func NewRestartTracker(policy *structs.RestartPolicy, jobType string, tlc *structs.TaskLifecycleConfig) *RestartTracker {
+	onSuccess := true
+
 	// Batch jobs should not restart if they exit successfully
-	onSuccess := jobType != structs.JobTypeBatch
+	if jobType == structs.JobTypeBatch || jobType == structs.JobTypeSysBatch {
+		fmt.Println("SH set onSuccess to false")
+		onSuccess = false
+	}
 
 	// Prestart sidecars should get restarted on success
 	if tlc != nil && tlc.Hook == structs.TaskLifecycleHookPrestart {
@@ -33,6 +38,8 @@ func NewRestartTracker(policy *structs.RestartPolicy, jobType string, tlc *struc
 	if tlc != nil && tlc.Hook == structs.TaskLifecycleHookPoststart {
 		onSuccess = tlc.Sidecar
 	}
+
+	fmt.Println("SH NewRestartTracker, jobType:", jobType, "onSuccess:", onSuccess)
 
 	return &RestartTracker{
 		startTime: time.Now(),
@@ -204,6 +211,7 @@ func (r *RestartTracker) GetState() (string, time.Duration) {
 		// don't restart but don't mark as failed.
 		if r.exitRes.Successful() && !r.onSuccess {
 			r.reason = "Restart unnecessary as task terminated successfully"
+			fmt.Println("TASK TERM SUCCESS")
 			return structs.TaskTerminated, 0
 		}
 	}

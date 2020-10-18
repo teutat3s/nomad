@@ -8961,6 +8961,7 @@ func (a *Allocation) ServerTerminalStatus() bool {
 
 // ClientTerminalStatus returns if the client status is terminal and will no longer transition
 func (a *Allocation) ClientTerminalStatus() bool {
+	fmt.Println("Allocation.ClientTerminalStatus:", a.ClientStatus)
 	switch a.ClientStatus {
 	case AllocClientStatusComplete, AllocClientStatusFailed, AllocClientStatusLost:
 		return true
@@ -10133,6 +10134,7 @@ type Plan struct {
 // AppendStoppedAlloc marks an allocation to be stopped. The clientStatus of the
 // allocation may be optionally set by passing in a non-empty value.
 func (p *Plan) AppendStoppedAlloc(alloc *Allocation, desiredDesc, clientStatus, followupEvalID string) {
+	fmt.Println("SH Plan.AppendStoppedAlloc:", alloc.Name, "client status", clientStatus)
 	newAlloc := new(Allocation)
 	*newAlloc = *alloc
 

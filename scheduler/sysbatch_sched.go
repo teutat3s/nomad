@@ -249,10 +249,14 @@ func (s *SysBatchScheduler) computeJobAllocs() error {
 	fmt.Println("allocs:", allocs, "terminal:", terminalAllocs)
 
 	diff := diffSystemAllocs(s.job, s.nodes, tainted, allocs, terminalAllocs)
-	s.logger.Warn("reconciled current state with desired state",
+	fmt.Println /*s.logger.Warn*/ ("SH reconciled current state with desired state",
 		"place", len(diff.place), "update", len(diff.update),
 		"migrate", len(diff.migrate), "stop", len(diff.stop),
 		"ignore", len(diff.ignore), "lost", len(diff.lost))
+
+	zero := diff.place[0]
+	fmt.Println("SH zero name:", zero.Name, "tg:", zero.TaskGroup,
+		"desired status:", zero.Alloc.DesiredStatus, "desired tx:", zero.Alloc.DesiredTransition)
 
 	// Add all the allocs to stop
 	for _, e := range diff.stop {
