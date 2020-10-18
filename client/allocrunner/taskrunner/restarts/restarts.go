@@ -14,10 +14,10 @@ const (
 	// jitter is the percent of jitter added to restart delays.
 	jitter = 0.25
 
-	ReasonNoRestartsAllowed   = "Policy allows no restarts"
-	ReasonUnrecoverableErrror = "Error was unrecoverable"
-	ReasonWithinPolicy        = "Restart within policy"
-	ReasonDelay               = "Exceeded allowed attempts, applying a delay"
+	ReasonNoRestartsAllowed  = "Policy allows no restarts"
+	ReasonUnrecoverableError = "Error was unrecoverable"
+	ReasonWithinPolicy       = "Restart within policy"
+	ReasonDelay              = "Exceeded allowed attempts, applying a delay"
 )
 
 func NewRestartTracker(policy *structs.RestartPolicy, jobType string, tlc *structs.TaskLifecycleConfig) *RestartTracker {
@@ -203,7 +203,7 @@ func (r *RestartTracker) GetState() (string, time.Duration) {
 	if r.startErr != nil {
 		// If the error is not recoverable, do not restart.
 		if !structs.IsRecoverable(r.startErr) {
-			r.reason = ReasonUnrecoverableErrror
+			r.reason = ReasonUnrecoverableError
 			return structs.TaskNotRestarting, 0
 		}
 	} else if r.exitRes != nil {
