@@ -58,6 +58,8 @@ func (c *CoreScheduler) Process(eval *structs.Evaluation) error {
 		return c.csiPluginGC(eval)
 	case structs.CoreJobForceGC:
 		return c.forceGC(eval)
+	case structs.CoreJobEventGC:
+		return c.eventGC(eval)
 	default:
 		return fmt.Errorf("core scheduler cannot handle job '%s'", eval.JobID)
 	}
@@ -867,5 +869,29 @@ func (c *CoreScheduler) csiPluginGC(eval *structs.Evaluation) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (c *CoreScheduler) eventGC(eval *structs.Evaluation) error {
+	// The amount of events to persist is configured in the state store config
+	// so we just need to make the RPC to submit a raft log so that the FSM
+	// does the work.
+	var max int
+	if c.srv.config != nil && c.srv.config.DurableEventCount > 0 {
+		max = int(c.srv.config.DurableEventCount)
+	}
+
+	req := &structs.EventGCRequest{
+		MaxEvents: max,
+		QueryOptions: structs.QueryOptions{
+			Region:    c.srv.Region(),
+			AuthToken: eval.LeaderACL,
+		},
+	}
+	if err := c.srv.RPC("Event.GC", req, &structs.GenericResponse{}); err != nil {
+		c.logger.Error("failed to GC events", "error", err)
+		return err
+	}
+
 	return nil
 }

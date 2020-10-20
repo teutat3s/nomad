@@ -374,6 +374,14 @@ func convertServerConfig(agentConfig *Config) (*nomad.Config, error) {
 		conf.CSIPluginGCThreshold = dur
 	}
 
+	if gcThreshold := agentConfig.Server.EventGCInterval; gcThreshold != "" {
+		dur, err := time.ParseDuration(gcThreshold)
+		if err != nil {
+			return nil, err
+		}
+		conf.EventGCInterval = dur
+	}
+
 	if heartbeatGrace := agentConfig.Server.HeartbeatGrace; heartbeatGrace != 0 {
 		conf.HeartbeatGrace = heartbeatGrace
 	}

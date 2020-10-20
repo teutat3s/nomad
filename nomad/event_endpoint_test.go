@@ -508,3 +508,8 @@ func TestEventStream_ACL(t *testing.T) {
 		})
 	}
 }
+
+func TestEventEndpoint_GC(t *testing.T) {
+	t.Parallel()
+
+}
