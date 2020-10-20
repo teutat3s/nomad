@@ -295,6 +295,8 @@ func (n *nomadFSM) Apply(log *raft.Log) interface{} {
 		return n.applyCSIVolumeBatchClaim(buf[1:], log.Index)
 	case structs.CSIPluginDeleteRequestType:
 		return n.applyCSIPluginDelete(buf[1:], log.Index)
+	case structs.EventBatchDeleteRequestType:
+		return n.applyEventBatchDelete(buf[1:], log.Index)
 	}
 
 	// Check enterprise only message types.
@@ -1785,6 +1787,21 @@ func (n *nomadFSM) applyUpsertScalingEvent(buf []byte, index uint64) interface{}
 	if err := n.state.UpsertScalingEvent(index, &req); err != nil {
 		n.logger.Error("UpsertScalingEvent failed", "error", err)
 		return err
+	}
+
+	return nil
+}
+
+func (n *nomadFSM) applyEventBatchDelete(buf []byte, index uint64) interface{} {
+	defer metrics.MeasureSince([]string{"nomad", "fsm", "batch_event_delete"}, time.Now())
+
+	var req structs.EventGCRequest
+	if err := structs.Decode(buf, &req); err != nil {
+		panic(fmt.Errorf("failed to decode request: %v", err))
+	}
+
+	if err := n.state.DeleteOldEvents(index, req.MaxEvents); err != nil {
+		n.logger.Error("TruncateEventsAfterLatest failed", "error", err)
 	}
 
 	return nil

@@ -419,6 +419,10 @@ type ServerConfig struct {
 	// GCed but the threshold can be used to filter by age.
 	CSIPluginGCThreshold string `hcl:"csi_plugin_gc_threshold"`
 
+	// EventGCThreshold controls how often we dispatch a job to GC old events
+	// that are available for garbage collection
+	EventGCInterval string `hcl:"event_gc_interval"`
+
 	// HeartbeatGrace is the grace period beyond the TTL to account for network,
 	// processing delays and clock skew before marking a node as "down".
 	HeartbeatGrace    time.Duration
@@ -1372,6 +1376,9 @@ func (a *ServerConfig) Merge(b *ServerConfig) *ServerConfig {
 	}
 	if b.CSIPluginGCThreshold != "" {
 		result.CSIPluginGCThreshold = b.CSIPluginGCThreshold
+	}
+	if b.EventGCInterval != "" {
+		result.EventGCInterval = b.EventGCInterval
 	}
 	if b.HeartbeatGrace != 0 {
 		result.HeartbeatGrace = b.HeartbeatGrace

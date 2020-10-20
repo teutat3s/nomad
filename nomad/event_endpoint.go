@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"time"
 
+	metrics "github.com/armon/go-metrics"
 	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/hashicorp/nomad/acl"
 	"github.com/hashicorp/nomad/helper"
@@ -20,6 +21,21 @@ type Event struct {
 
 func (e *Event) register() {
 	e.srv.streamingRpcs.Register("Event.Stream", e.stream)
+}
+
+func (e *Event) GC(args *structs.EventGCRequest, reply *structs.GenericResponse) error {
+	if done, err := e.srv.forward("Event.GC", args, args, reply); done {
+		return err
+	}
+	defer metrics.MeasureSince([]string{"nomad", "event", "gc"}, time.Now())
+
+	// Update via Raft
+	_, index, err := e.srv.raftApply(structs.EventBatchDeleteRequestType, args)
+	if err != nil {
+		return err
+	}
+	reply.Index = index
+	return nil
 }
 
 func (e *Event) stream(conn io.ReadWriteCloser) {

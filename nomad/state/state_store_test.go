@@ -9523,6 +9523,39 @@ func TestStateStore_UpsertScalingEvent_LimitAndOrder(t *testing.T) {
 	require.Equal(expectedEvents, actualEvents)
 }
 
+func TestStateStore_DeleteOldEvents(t *testing.T) {
+	t.Parallel()
+
+	s := testStateStore(t)
+
+	for i := 1; i < 101; i++ {
+		e := structs.Events{
+			Index:  uint64(i),
+			Events: []structs.Event{{}, {}},
+		}
+		require.NoError(t, s.UpsertEvents(uint64(i), &e))
+	}
+
+	require.NoError(t, s.DeleteOldEvents(1000, 50))
+
+	iter, err := s.Events(nil)
+	require.NoError(t, err)
+
+	var out []*structs.Events
+	for {
+		raw := iter.Next()
+		if raw == nil {
+			break
+		}
+		e := raw.(*structs.Events)
+		out = append(out, e)
+	}
+
+	// 24 * 2 = 48 DeleteOldEvents adds length before checking so it can delete
+	// slightly more depending on the amount of events in a single entry
+	require.Len(t, out, 24)
+}
+
 func TestStateStore_RestoreScalingEvents(t *testing.T) {
 	t.Parallel()
 	require := require.New(t)
