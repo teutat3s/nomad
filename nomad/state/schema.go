@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/nomad/nomad/structs"
 )
 
+const (
+	TableNamespaces = "namespaces"
+)
+
 var (
 	schemaFactories SchemaFactories
 	factoriesLock   sync.Mutex
@@ -53,6 +57,7 @@ func init() {
 		scalingPolicyTableSchema,
 		scalingEventTableSchema,
 		eventTableSchema,
+		namespaceTableSchema,
 	}...)
 }
 
@@ -912,6 +917,31 @@ func eventTableSchema() *memdb.TableSchema {
 				Unique:       true,
 				Indexer: &memdb.UintFieldIndex{
 					Field: "Index",
+				},
+			},
+		},
+	}
+}
+
+// namespaceTableSchema returns the MemDB schema for the namespace table.
+func namespaceTableSchema() *memdb.TableSchema {
+	return &memdb.TableSchema{
+		Name: TableNamespaces,
+		Indexes: map[string]*memdb.IndexSchema{
+			"id": {
+				Name:         "id",
+				AllowMissing: false,
+				Unique:       true,
+				Indexer: &memdb.StringFieldIndex{
+					Field: "Name",
+				},
+			},
+			"quota": {
+				Name:         "quota",
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.StringFieldIndex{
+					Field: "Quota",
 				},
 			},
 		},
