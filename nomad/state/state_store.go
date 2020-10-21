@@ -1964,18 +1964,22 @@ func (s *StateStore) JobsByScheduler(ws memdb.WatchSet, schedulerType string) (m
 	return iter, nil
 }
 
-// JobsByGC returns an iterator over all jobs eligible or uneligible for garbage
+// JobsByGC returns an iterator over all jobs eligible or ineligible for garbage
 // collection.
 func (s *StateStore) JobsByGC(ws memdb.WatchSet, gc bool) (memdb.ResultIterator, error) {
+	fmt.Println("StateStore.JobsByGC gc:", gc)
 	txn := s.db.ReadTxn()
 
 	iter, err := txn.Get("jobs", "gc", gc)
 	if err != nil {
+		fmt.Println("StateStore.jobsByGC, err:", err)
 		return nil, err
 	}
+	fmt.Println("StateStore.jobsByGC B")
 
 	ws.Add(iter.WatchCh())
 
+	fmt.Println("StateSTore.jobsByGC, iter:", iter)
 	return iter, nil
 }
 

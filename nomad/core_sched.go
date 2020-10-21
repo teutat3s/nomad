@@ -65,6 +65,7 @@ func (c *CoreScheduler) Process(eval *structs.Evaluation) error {
 
 // forceGC is used to garbage collect all eligible objects.
 func (c *CoreScheduler) forceGC(eval *structs.Evaluation) error {
+	fmt.Println("CoreScheduler.forceGC, eval.jobid:", eval.JobID)
 	if err := c.jobGC(eval); err != nil {
 		return err
 	}
@@ -88,6 +89,7 @@ func (c *CoreScheduler) forceGC(eval *structs.Evaluation) error {
 
 // jobGC is used to garbage collect eligible jobs.
 func (c *CoreScheduler) jobGC(eval *structs.Evaluation) error {
+	fmt.Println("CoreScheduler.jobGC, eval.jobID:", eval.JobID)
 	// Get all the jobs eligible for garbage collection.
 	ws := memdb.NewWatchSet()
 	iter, err := c.snap.JobsByGC(ws, true)
@@ -95,13 +97,17 @@ func (c *CoreScheduler) jobGC(eval *structs.Evaluation) error {
 		return err
 	}
 
+	fmt.Println("CoreScheduler.jobGC A")
+
 	var oldThreshold uint64
 	if eval.JobID == structs.CoreJobForceGC {
+		fmt.Println("CoreScheduler.jobGC B")
 		// The GC was forced, so set the threshold to its maximum so everything
 		// will GC.
 		oldThreshold = math.MaxUint64
 		c.logger.Debug("forced job GC")
 	} else {
+		fmt.Println("CoreScheduler.jobGC C")
 		// Get the time table to calculate GC cutoffs.
 		tt := c.srv.fsm.TimeTable()
 		cutoff := time.Now().UTC().Add(-1 * c.srv.config.JobGCThreshold)
@@ -114,35 +120,49 @@ func (c *CoreScheduler) jobGC(eval *structs.Evaluation) error {
 	var gcAlloc, gcEval []string
 	var gcJob []*structs.Job
 
+	fmt.Println("CoreScheduler.jobGC OUTER")
 OUTER:
 	for i := iter.Next(); i != nil; i = iter.Next() {
 		job := i.(*structs.Job)
+		fmt.Println("CoreScheduler.jobGC, job:", job.Name)
 
 		// Ignore new jobs.
 		if job.CreateIndex > oldThreshold {
+			fmt.Println("CoreScheduler.jobGC ignore new job")
 			continue
 		}
+
+		fmt.Println("CoreScheduler.jobGC not ignore")
 
 		ws := memdb.NewWatchSet()
 		evals, err := c.snap.EvalsByJob(ws, job.Namespace, job.ID)
 		if err != nil {
+			fmt.Println("CoreScheduler.jobGC, evalsByJob err:", err)
 			c.logger.Error("job GC failed to get evals for job", "job", job.ID, "error", err)
 			continue
 		}
 
+		fmt.Println("CoreScheulder.jobGC, evals:", len(evals))
+
 		allEvalsGC := true
 		var jobAlloc, jobEval []string
 		for _, eval := range evals {
+			fmt.Println("CoreScheulder.jobGC, E eval.jobID:", eval.JobID)
 			gc, allocs, err := c.gcEval(eval, oldThreshold, true)
 			if err != nil {
+				fmt.Println("CoreScheduler.jobGC E, err:", err)
 				continue OUTER
 			}
+			fmt.Println("CoreScheduler.jobGC E allocs:", len(allocs))
 
+			fmt.Println("CoreScheduler.jobGC E gc:", gc)
 			if gc {
 				jobEval = append(jobEval, eval.ID)
 				jobAlloc = append(jobAlloc, allocs...)
+				fmt.Println("CoreScheduler.jobGC E appended allocs", len(allocs))
 			} else {
 				allEvalsGC = false
+				fmt.Println("CoreScheduler.jobGC E not all evals gc")
 				break
 			}
 		}
@@ -156,19 +176,26 @@ OUTER:
 
 	}
 
+	fmt.Println("CoreScheduler.jobGC F (exit OUTER)")
+
 	// Fast-path the nothing case
 	if len(gcEval) == 0 && len(gcAlloc) == 0 && len(gcJob) == 0 {
+		fmt.Println("CoreScheduler.jobGC (fast path nothing)")
 		return nil
 	}
+
+	fmt.Println("CoreSCheduler.jobGC found eligible objects")
 	c.logger.Debug("job GC found eligible objects",
 		"jobs", len(gcJob), "evals", len(gcEval), "allocs", len(gcAlloc))
 
 	// Reap the evals and allocs
 	if err := c.evalReap(gcEval, gcAlloc); err != nil {
+		fmt.Println("CoreScheulder.jobGC evalReap err:", err)
 		return err
 	}
 
 	// Reap the jobs
+	fmt.Println("CoreScheduler.jobGC will reap", len(gcJob))
 	return c.jobReap(gcJob, eval.LeaderACL)
 }
 

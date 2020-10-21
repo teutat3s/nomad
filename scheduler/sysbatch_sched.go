@@ -254,9 +254,9 @@ func (s *SysBatchScheduler) computeJobAllocs() error {
 		"migrate", len(diff.migrate), "stop", len(diff.stop),
 		"ignore", len(diff.ignore), "lost", len(diff.lost))
 
-	zero := diff.place[0]
-	fmt.Println("SH zero name:", zero.Name, "tg:", zero.TaskGroup,
-		"desired status:", zero.Alloc.DesiredStatus, "desired tx:", zero.Alloc.DesiredTransition)
+	//zero := diff.place[0] // todo: NPE on gc of dead job!
+	//fmt.Println("SH zero name:", zero.Name, "tg:", zero.TaskGroup,
+	//	"desired status:", zero.Alloc.DesiredStatus, "desired tx:", zero.Alloc.DesiredTransition)
 
 	// Add all the allocs to stop
 	for _, e := range diff.stop {
