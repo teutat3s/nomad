@@ -5,7 +5,6 @@
 # the ./main-running, ./sidecar-running, or ./poststart-running files
 
 job "service-lifecycle" {
-
   datacenters = ["dc1"]
 
   type = "service"
@@ -16,9 +15,7 @@ job "service-lifecycle" {
   }
 
   group "test" {
-
     task "init" {
-
       lifecycle {
         hook = "prestart"
       }
@@ -43,7 +40,6 @@ rm ${NOMAD_ALLOC_DIR}/init-running
 EOT
 
         destination = "local/prestart.sh"
-
       }
 
       resources {
@@ -53,7 +49,6 @@ EOT
     }
 
     task "sidecar" {
-
       lifecycle {
         hook    = "prestart"
         sidecar = true
@@ -79,7 +74,6 @@ sleep 300
 EOT
 
         destination = "local/sidecar.sh"
-
       }
 
       resources {
@@ -89,7 +83,6 @@ EOT
     }
 
     task "main" {
-
       driver = "docker"
 
       config {
@@ -123,9 +116,7 @@ EOT
       }
     }
 
-
     task "poststart" {
-
       lifecycle {
         hook = "poststart"
       }
@@ -160,6 +151,5 @@ EOT
         memory = 64
       }
     }
-
   }
 }

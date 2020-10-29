@@ -1,5 +1,4 @@
 job "demo2" {
-
   datacenters = ["dc1", "dc2"]
 
   constraint {

@@ -25,7 +25,7 @@ job "podman-redis" {
 
         network {
           mbits = 20
-          port "redis" {}
+          port  "redis"{}
         }
       }
     }

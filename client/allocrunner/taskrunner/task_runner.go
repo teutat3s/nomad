@@ -967,6 +967,7 @@ func (tr *TaskRunner) buildTaskConfig() *drivers.TaskConfig {
 		ID:            fmt.Sprintf("%s/%s/%s", alloc.ID, task.Name, invocationid),
 		Name:          task.Name,
 		JobName:       alloc.Job.Name,
+		JobType:       alloc.Job.Type,
 		TaskGroupName: alloc.TaskGroup,
 		Resources: &drivers.Resources{
 			NomadResources: taskResources,
@@ -985,6 +986,7 @@ func (tr *TaskRunner) buildTaskConfig() *drivers.TaskConfig {
 		AllocDir:         tr.taskDir.AllocDir,
 		StdoutPath:       tr.logmonHookConfig.stdoutFifo,
 		StderrPath:       tr.logmonHookConfig.stderrFifo,
+		Templates:        task.Templates,
 		AllocID:          tr.allocID,
 		NetworkIsolation: tr.networkIsolationSpec,
 		DNS:              dns,

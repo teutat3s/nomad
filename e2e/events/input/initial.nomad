@@ -21,6 +21,7 @@ job "deployment_auto.nomad" {
       env {
         version = "0"
       }
+
       config {
         command = "/bin/sleep"
 

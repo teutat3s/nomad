@@ -7,13 +7,11 @@ job "secrets" {
   }
 
   group "group" {
-
     meta {
       test_deploy = "DEPLOYNUMBER"
     }
 
     task "task" {
-
       driver = "docker"
 
       config {
@@ -50,6 +48,5 @@ EOT
         memory = 64
       }
     }
-
   }
 }

@@ -4,7 +4,6 @@
 # files: ./init-ran, ./main-ran, ./poststart-run
 
 job "batch-lifecycle" {
-
   datacenters = ["dc1"]
 
   type = "batch"
@@ -15,9 +14,7 @@ job "batch-lifecycle" {
   }
 
   group "test" {
-
     task "init" {
-
       lifecycle {
         hook = "prestart"
       }
@@ -43,7 +40,6 @@ rm ${NOMAD_ALLOC_DIR}/init-running
 EOT
 
         destination = "local/prestart.sh"
-
       }
 
       resources {
@@ -53,7 +49,6 @@ EOT
     }
 
     task "main" {
-
       driver = "docker"
 
       config {
@@ -88,9 +83,7 @@ EOT
       }
     }
 
-
     task "poststart" {
-
       lifecycle {
         hook = "poststart"
       }
@@ -127,6 +120,5 @@ EOT
         memory = 64
       }
     }
-
   }
 }

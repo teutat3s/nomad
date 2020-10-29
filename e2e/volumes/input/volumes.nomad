@@ -7,14 +7,12 @@ job "volumes" {
   }
 
   group "group" {
-
     volume "data" {
       type   = "host"
       source = "shared_data"
     }
 
     task "docker_task" {
-
       driver = "docker"
 
       config {
@@ -23,16 +21,17 @@ job "volumes" {
         args    = ["/usr/local/bin/myapplication.sh"]
 
         mounts = [
-          # this mount binds the task's own NOMAD_TASK_DIR directory as the
-          # source, letting us map it to a more convenient location; this is a
-          # frequently-used way to get templates into an arbitrary location in
-          # the task for Docker
           {
-            type     = "bind"
+            # this mount binds the task's own NOMAD_TASK_DIR directory as the
+            # source, letting us map it to a more convenient location; this is a
+            # frequently-used way to get templates into an arbitrary location in
+            # the task for Docker
+            type = "bind"
+
             source   = "local"
             target   = "/usr/local/bin"
             readonly = true
-          }
+          },
         ]
       }
 
@@ -66,7 +65,6 @@ EOT
     }
 
     task "exec_task" {
-
       driver = "exec"
 
       config {

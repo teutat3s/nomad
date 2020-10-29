@@ -7,9 +7,7 @@ job "templating" {
   }
 
   group "docker_downstream" {
-
     task "task" {
-
       driver = "docker"
 
       config {
@@ -47,9 +45,7 @@ EOT
   }
 
   group "exec_downstream" {
-
     task "task" {
-
       driver = "exec"
 
       config {
@@ -68,11 +64,12 @@ EOT
       }
 
       template {
-        data        = <<EOT
+        data = <<EOT
 ---
 key: {{ key "consultemplatetest" }}
 job: {{ env "NOMAD_JOB_NAME" }}
 EOT
+
         destination = "${NOMAD_TASK_DIR}/kv.yml"
         change_mode = "restart"
       }
@@ -85,11 +82,11 @@ EOT
   }
 
   group "upstream" {
-
     count = 2
 
     network {
       mode = "bridge"
+
       port "web" {
         to = -1
       }
@@ -101,7 +98,6 @@ EOT
     }
 
     task "task" {
-
       driver = "exec"
 
       config {
@@ -115,5 +111,4 @@ EOT
       }
     }
   }
-
 }

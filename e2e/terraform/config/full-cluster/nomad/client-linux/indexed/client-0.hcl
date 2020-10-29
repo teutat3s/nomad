@@ -17,6 +17,7 @@ client {
 }
 
 plugin_dir = "/opt/nomad/plugins"
+
 plugin "nomad-driver-podman" {
   config {
     volumes {

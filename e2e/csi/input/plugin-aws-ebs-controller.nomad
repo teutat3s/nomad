@@ -15,7 +15,6 @@ job "plugin-aws-ebs-controller" {
   }
 
   group "controller" {
-
     count = 2 // HA for node drain testing
 
     task "plugin" {
