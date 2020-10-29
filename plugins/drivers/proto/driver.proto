@@ -455,15 +455,22 @@ message TaskConfig {
     // JobName is the name of the job of which this task is part of
     string job_name = 14;
 
+    // JobType is the type of the job of which this task is part of
+    string job_type = 15;
+
     // AllocId is the ID of the associated allocation
-    string alloc_id = 15;
+    string alloc_id = 16;
 
     // NetworkIsolationSpec specifies the configuration for the network namespace
     // to use for the task. *Only supported on Linux
-    NetworkIsolationSpec network_isolation_spec = 16;
+    NetworkIsolationSpec network_isolation_spec = 17;
 
     // DNSConfig is the configuration for task DNS resolvers and other options
-    DNSConfig dns = 17;
+    DNSConfig dns = 18;
+
+    // Templates is a list of task templates configurations
+    repeated Template templates = 19;
+
 }
 
 message Resources {
@@ -564,6 +571,27 @@ message Device {
     // Example: "rw"
     string cgroup_permissions = 3;
 }
+
+message Template {
+    // TODO
+    string source_path = 1;
+
+    // TODO
+    string destination_path = 2;
+
+    // TODO
+    string change_mode = 3;
+
+    // TODO
+    string change_signal = 4;
+
+    // TODO
+    string perms = 5;
+
+    // TODO
+    bool env_vars = 6;
+}
+
 
 enum TaskState {
     UNKNOWN = 0;

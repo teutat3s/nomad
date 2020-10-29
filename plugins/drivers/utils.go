@@ -51,6 +51,7 @@ func taskConfigFromProto(pb *proto.TaskConfig) *TaskConfig {
 	return &TaskConfig{
 		ID:               pb.Id,
 		JobName:          pb.JobName,
+		JobType:          pb.JobType,
 		TaskGroupName:    pb.TaskGroupName,
 		Name:             pb.Name,
 		Env:              pb.Env,
@@ -63,6 +64,7 @@ func taskConfigFromProto(pb *proto.TaskConfig) *TaskConfig {
 		AllocDir:         pb.AllocDir,
 		StdoutPath:       pb.StdoutPath,
 		StderrPath:       pb.StderrPath,
+		Templates:        TemplatesFromProto(pb.Templates),
 		AllocID:          pb.AllocId,
 		NetworkIsolation: NetworkIsolationSpecFromProto(pb.NetworkIsolationSpec),
 		DNS:              dnsConfigFromProto(pb.Dns),
@@ -76,6 +78,7 @@ func taskConfigToProto(cfg *TaskConfig) *proto.TaskConfig {
 	pb := &proto.TaskConfig{
 		Id:                   cfg.ID,
 		JobName:              cfg.JobName,
+		JobType:              cfg.JobType,
 		TaskGroupName:        cfg.TaskGroupName,
 		Name:                 cfg.Name,
 		Env:                  cfg.Env,
@@ -88,6 +91,7 @@ func taskConfigToProto(cfg *TaskConfig) *proto.TaskConfig {
 		MsgpackDriverConfig:  cfg.rawDriverConfig,
 		StdoutPath:           cfg.StdoutPath,
 		StderrPath:           cfg.StderrPath,
+		Templates:            TemplatesToProto(cfg.Templates),
 		AllocId:              cfg.AllocID,
 		NetworkIsolationSpec: NetworkIsolationSpecToProto(cfg.NetworkIsolation),
 		Dns:                  dnsConfigToProto(cfg.DNS),
@@ -231,6 +235,62 @@ func ResourcesToProto(r *Resources) *proto.Resources {
 	}
 
 	return &pb
+}
+
+func TemplatesFromProto(templates []*proto.Template) []*structs.Template {
+	if templates == nil {
+		return nil
+	}
+
+	out := make([]*structs.Template, len(templates))
+	for i, d := range templates {
+		out[i] = TemplateFromProto(d)
+	}
+
+	return out
+}
+
+func TemplateFromProto(template *proto.Template) *structs.Template {
+	if template == nil {
+		return nil
+	}
+
+	return &structs.Template{
+		SourcePath:   template.SourcePath,
+		DestPath:     template.DestinationPath,
+		ChangeMode:   template.ChangeMode,
+		ChangeSignal: template.ChangeSignal,
+		Perms:        template.Perms,
+		Envvars:      template.EnvVars,
+	}
+}
+
+func TemplatesToProto(templates []*structs.Template) []*proto.Template {
+	if templates == nil {
+		return nil
+	}
+
+	out := make([]*proto.Template, len(templates))
+	for i, d := range templates {
+		out[i] = TemplateToProto(d)
+	}
+
+	return out
+}
+
+func TemplateToProto(template *structs.Template) *proto.Template {
+	if template == nil {
+		return nil
+	}
+
+	return &proto.Template{
+		SourcePath:      template.SourcePath,
+		DestinationPath: template.DestPath,
+		ChangeMode:      template.ChangeMode,
+		ChangeSignal:    template.ChangeSignal,
+		Perms:           template.Perms,
+		EnvVars:         template.Envvars,
+	}
 }
 
 func DevicesFromProto(devices []*proto.Device) []*DeviceConfig {

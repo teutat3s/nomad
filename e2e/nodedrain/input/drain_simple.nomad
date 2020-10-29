@@ -7,7 +7,6 @@ job "drain_simple" {
   }
 
   group "group" {
-
     task "task" {
       driver = "docker"
 

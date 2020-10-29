@@ -7,7 +7,6 @@ job "drain_deadline" {
   }
 
   group "group" {
-
     task "task" {
       driver = "docker"
 

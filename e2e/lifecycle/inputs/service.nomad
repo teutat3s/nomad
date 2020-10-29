@@ -5,7 +5,6 @@
 # the ./main-running, ./sidecar-running, or ./poststart-running files
 
 job "service-lifecycle" {
-
   datacenters = ["dc1"]
 
   type = "service"
@@ -16,9 +15,7 @@ job "service-lifecycle" {
   }
 
   group "test" {
-
     task "init" {
-
       lifecycle {
         hook = "prestart"
       }
@@ -43,7 +40,6 @@ rm ${NOMAD_ALLOC_DIR}/init-running
 EOT
 
         destination = "local/prestart.sh"
-
       }
 
       resources {
@@ -53,7 +49,6 @@ EOT
     }
 
     task "sidecar" {
-
       lifecycle {
         hook    = "prestart"
         sidecar = true
@@ -79,7 +74,6 @@ sleep 300
 EOT
 
         destination = "local/sidecar.sh"
-
       }
 
       resources {
@@ -89,7 +83,6 @@ EOT
     }
 
     task "main" {
-
       driver = "docker"
 
       config {
@@ -101,13 +94,6 @@ EOT
       template {
         data = <<EOT
 #!/bin/sh
-
-function cleanup() {
-  echo stopping
-  rm ${NOMAD_ALLOC_DIR}/main-running
-  exit
-}
-
 touch ${NOMAD_ALLOC_DIR}/main-ran
 touch ${NOMAD_ALLOC_DIR}/main-running
 touch ${NOMAD_ALLOC_DIR}/main-started
@@ -118,17 +104,7 @@ if [ ! -f ${NOMAD_ALLOC_DIR}/sidecar-running ]; then exit 14; fi
 sleep 2
 if [ ! -f ${NOMAD_ALLOC_DIR}/poststart-started ]; then exit 15; fi
 touch ${NOMAD_ALLOC_DIR}/main-checked
-
-echo trap
-trap cleanup SIGTERM
-
-echo sleep
-while true
-do
-  sleep 1
-done
-
-
+sleep 300
 EOT
 
         destination = "local/main.sh"
@@ -140,9 +116,7 @@ EOT
       }
     }
 
-
     task "poststart" {
-
       lifecycle {
         hook = "poststart"
       }
@@ -177,45 +151,5 @@ EOT
         memory = 64
       }
     }
-
-    task "poststop" {
-
-      lifecycle {
-        hook = "poststop"
-      }
-
-      driver = "docker"
-
-      config {
-        image   = "busybox:1"
-        command = "/bin/sh"
-        args    = ["local/poststop.sh"]
-      }
-
-      template {
-        data = <<EOT
-#!/bin/sh
-sleep 1
-touch ${NOMAD_ALLOC_DIR}/poststop-ran
-touch ${NOMAD_ALLOC_DIR}/poststop-running
-touch ${NOMAD_ALLOC_DIR}/poststop-started
-sleep 5
-
-if [ ! -f ${NOMAD_ALLOC_DIR}/init-ran ]; then exit 12; fi
-if [ ! -f ${NOMAD_ALLOC_DIR}/main-started ]; then exit 15; fi
-if [ -f ${NOMAD_ALLOC_DIR}/init-running ]; then exit 14; fi
-if [ -f ${NOMAD_ALLOC_DIR}/main-running ]; then exit 17; fi
-rm ${NOMAD_ALLOC_DIR}/poststop-running
-EOT
-
-        destination = "local/poststop.sh"
-      }
-
-      resources {
-        cpu    = 64
-        memory = 64
-      }
-    }
-
   }
 }

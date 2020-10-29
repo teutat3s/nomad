@@ -4,7 +4,6 @@
 # files: ./init-ran, ./main-ran, ./poststart-run
 
 job "batch-lifecycle" {
-
   datacenters = ["dc1"]
 
   type = "batch"
@@ -15,9 +14,7 @@ job "batch-lifecycle" {
   }
 
   group "test" {
-
     task "init" {
-
       lifecycle {
         hook = "prestart"
       }
@@ -43,7 +40,6 @@ rm ${NOMAD_ALLOC_DIR}/init-running
 EOT
 
         destination = "local/prestart.sh"
-
       }
 
       resources {
@@ -53,7 +49,6 @@ EOT
     }
 
     task "main" {
-
       driver = "docker"
 
       config {
@@ -88,9 +83,7 @@ EOT
       }
     }
 
-
     task "poststart" {
-
       lifecycle {
         hook = "poststart"
       }
@@ -111,7 +104,8 @@ touch ${NOMAD_ALLOC_DIR}/poststart-ran
 touch ${NOMAD_ALLOC_DIR}/poststart-running
 touch ${NOMAD_ALLOC_DIR}/poststart-started
 sleep 10
-
+# THIS IS WHERE THE ACTUAL TESTING HAPPENS
+# IF init-ran doesn't exist, then the init task hasn't run yet, so fail
 if [ ! -f ${NOMAD_ALLOC_DIR}/init-ran ]; then exit 12; fi
 if [ ! -f ${NOMAD_ALLOC_DIR}/main-started ]; then exit 15; fi
 if [ -f ${NOMAD_ALLOC_DIR}/init-running ]; then exit 14; fi
@@ -119,45 +113,6 @@ rm ${NOMAD_ALLOC_DIR}/poststart-running
 EOT
 
         destination = "local/poststart.sh"
-      }
-
-      resources {
-        cpu    = 64
-        memory = 64
-      }
-    }
-
-    task "poststop" {
-
-      lifecycle {
-        hook = "poststop"
-      }
-
-      driver = "docker"
-
-      config {
-        image   = "busybox:1"
-        command = "/bin/sh"
-        args    = ["local/poststop.sh"]
-      }
-
-      template {
-        data = <<EOT
-#!/bin/sh
-sleep 1
-touch ${NOMAD_ALLOC_DIR}/poststop-ran
-touch ${NOMAD_ALLOC_DIR}/poststop-running
-touch ${NOMAD_ALLOC_DIR}/poststop-started
-sleep 5
-
-if [ ! -f ${NOMAD_ALLOC_DIR}/init-ran ]; then exit 12; fi
-if [ ! -f ${NOMAD_ALLOC_DIR}/main-started ]; then exit 15; fi
-if [ -f ${NOMAD_ALLOC_DIR}/init-running ]; then exit 14; fi
-if [ -f ${NOMAD_ALLOC_DIR}/main-running ]; then exit 17; fi
-rm ${NOMAD_ALLOC_DIR}/poststop-running
-EOT
-
-        destination = "local/poststop.sh"
       }
 
       resources {
