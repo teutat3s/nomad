@@ -182,7 +182,6 @@ job "example" {
       #   interval = "10s"
       #   timeout  = "2s"
       # }
-
     }
 
     # The "restart" stanza configures a group's behavior on task failure. If
@@ -355,7 +354,6 @@ job "example" {
         cpu    = 500 # 500 MHz
         memory = 256 # 256MB
       }
-
 
       # The "template" stanza instructs Nomad to manage a template, such as
       # a configuration file or script. This template can optionally pull data

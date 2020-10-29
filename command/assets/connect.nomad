@@ -228,6 +228,7 @@ job "countdash" {
     #   attribute = "${node.datacenter}"
     # }
 
+
     # targets can be used to define desired percentages of allocations
     # for each targeted attribute value.
     #

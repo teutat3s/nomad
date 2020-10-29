@@ -7,7 +7,6 @@ job "drain_migrate" {
   }
 
   group "group" {
-
     ephemeral_disk {
       migrate = true
       size    = "101"

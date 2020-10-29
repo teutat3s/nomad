@@ -8,23 +8,25 @@ job "simpleweb" {
   }
 
   group "simpleweb" {
-    network {
-      port "http" {
-        to = 8080
-      }
-    }
     task "simpleweb" {
       driver = "docker"
 
       config {
         image = "nginx:latest"
 
-        ports = ["http"]
+        port_map {
+          http = 8080
+        }
       }
 
       resources {
         cpu    = 256
         memory = 128
+
+        network {
+          mbits = 1
+          port  "http"{}
+        }
       }
 
       // TODO(tgross): this isn't passing health checks

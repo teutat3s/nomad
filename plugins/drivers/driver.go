@@ -249,6 +249,7 @@ func (c *DNSConfig) Copy() *DNSConfig {
 type TaskConfig struct {
 	ID               string
 	JobName          string
+	JobType          string
 	TaskGroupName    string
 	Name             string
 	Env              map[string]string
@@ -261,6 +262,7 @@ type TaskConfig struct {
 	rawDriverConfig  []byte
 	StdoutPath       string
 	StderrPath       string
+	Templates        []*structs.Template
 	AllocID          string
 	NetworkIsolation *NetworkIsolationSpec
 	DNS              *DNSConfig

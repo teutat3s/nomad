@@ -9,7 +9,6 @@ job "drain_ignore_system_service" {
   }
 
   group "group" {
-
     task "task" {
       driver = "docker"
 

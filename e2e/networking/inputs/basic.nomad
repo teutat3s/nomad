@@ -14,6 +14,7 @@ job "networking" {
 
     task "sleep" {
       driver = "docker"
+
       config {
         image   = "busybox:1"
         command = "/bin/sleep"
