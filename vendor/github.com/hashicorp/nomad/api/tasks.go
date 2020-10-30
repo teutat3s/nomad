@@ -680,7 +680,7 @@ func (t *Task) Canonicalize(tg *TaskGroup, job *Job) {
 	t.Resources.Canonicalize()
 
 	if t.KillTimeout == nil {
-		t.KillTimeout = timeToPtr(5 * time.Second)
+		t.KillTimeout = timeToPtr(0)
 	}
 	if t.LogConfig == nil {
 		t.LogConfig = DefaultLogConfig()
