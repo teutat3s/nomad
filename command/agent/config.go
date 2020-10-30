@@ -222,6 +222,9 @@ type ClientConfig struct {
 	// MaxKillTimeout allows capping the user-specifiable KillTimeout.
 	MaxKillTimeout string `hcl:"max_kill_timeout"`
 
+	// DefaultKillTimeout sets a default value for KillTimeout.
+	DefaultKillTimeout string `hcl:"default_kill_timeout"`
+
 	// ClientMaxPort is the upper range of the ports that the client uses for
 	// communicating with plugin subsystems
 	ClientMaxPort int `hcl:"client_max_port"`
@@ -862,6 +865,7 @@ func DefaultConfig() *Config {
 		Client: &ClientConfig{
 			Enabled:               false,
 			MaxKillTimeout:        "30s",
+			DefaultKillTimeout:    "5s",
 			ClientMinPort:         14000,
 			ClientMaxPort:         14512,
 			Reserved:              &Resources{},
@@ -1470,6 +1474,9 @@ func (a *ClientConfig) Merge(b *ClientConfig) *ClientConfig {
 	}
 	if b.MaxKillTimeout != "" {
 		result.MaxKillTimeout = b.MaxKillTimeout
+	}
+	if b.DefaultKillTimeout != "" {
+		result.DefaultKillTimeout = b.DefaultKillTimeout
 	}
 	if b.ClientMaxPort != 0 {
 		result.ClientMaxPort = b.ClientMaxPort
