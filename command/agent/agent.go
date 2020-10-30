@@ -553,6 +553,13 @@ func convertClientConfig(agentConfig *Config) (*clientconfig.Config, error) {
 	if agentConfig.Client.MemoryMB != 0 {
 		conf.MemoryMB = agentConfig.Client.MemoryMB
 	}
+	if agentConfig.Client.DefaultKillTimeout != "" {
+		dur, err := time.ParseDuration(agentConfig.Client.DefaultKillTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("Error parsing default kill timeout: %s", err)
+		}
+		conf.DefaultKillTimeout = dur
+	}
 	if agentConfig.Client.MaxKillTimeout != "" {
 		dur, err := time.ParseDuration(agentConfig.Client.MaxKillTimeout)
 		if err != nil {

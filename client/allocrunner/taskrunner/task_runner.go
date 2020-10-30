@@ -301,6 +301,11 @@ func NewTaskRunner(config *Config) (*TaskRunner, error) {
 		tstate = ts.Copy()
 	}
 
+	// Handle Default KillTimeout.
+	if config.Task.KillTimeout.String() == "0s" {
+		config.Task.KillTimeout = config.ClientConfig.DefaultKillTimeout
+	}
+
 	tr := &TaskRunner{
 		alloc:                config.Alloc,
 		allocID:              config.Alloc.ID,
@@ -336,6 +341,10 @@ func NewTaskRunner(config *Config) (*TaskRunner, error) {
 
 	// Create the logger based on the allocation ID
 	tr.logger = config.Logger.Named("task_runner").With("task", config.Task.Name)
+
+	tr.logger.Info("SHIT %+v", config.Task.KillTimeout)
+	tr.logger.Info("HEAD %+v", config.ClientConfig.DefaultKillTimeout)
+	tr.logger.Info("RAWR %+v", tr.task)
 
 	// Pull out the task's resources
 	ares := tr.alloc.AllocatedResources

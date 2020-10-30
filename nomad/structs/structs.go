@@ -6457,12 +6457,6 @@ func (c *CheckRestart) Validate() error {
 	return mErr.ErrorOrNil()
 }
 
-const (
-	// DefaultKillTimeout is the default timeout between signaling a task it
-	// will be killed and killing it.
-	DefaultKillTimeout = 5 * time.Second
-)
-
 // LogConfig provides configuration for log rotation
 type LogConfig struct {
 	MaxFiles      int
@@ -6697,11 +6691,6 @@ func (t *Task) Canonicalize(job *Job, tg *TaskGroup) {
 
 	if t.RestartPolicy == nil {
 		t.RestartPolicy = tg.RestartPolicy
-	}
-
-	// Set the default timeout if it is not specified.
-	if t.KillTimeout == 0 {
-		t.KillTimeout = DefaultKillTimeout
 	}
 
 	if t.Vault != nil {
@@ -9345,8 +9334,11 @@ func (a *Allocation) WaitClientStop() time.Time {
 		t = time.Now().UTC()
 	}
 
+	// TODO investigate if MAX KILL TIMEOUT is actually being used,
+	// Previous commit doesn't appear to do so.
 	// Find the max kill timeout
-	kill := DefaultKillTimeout
+	//kill := DefaultKillTimeout
+	kill := time.Second * 5
 	for _, t := range tg.Tasks {
 		if t.KillTimeout > kill {
 			kill = t.KillTimeout

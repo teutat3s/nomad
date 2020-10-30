@@ -117,6 +117,9 @@ type Config struct {
 	// used.
 	MaxKillTimeout time.Duration
 
+	// Default KillTimeout sets the user-specifiable KillTimeout.
+	DefaultKillTimeout time.Duration
+
 	// Servers is a list of known server addresses. These are as "host:port"
 	Servers []string
 
