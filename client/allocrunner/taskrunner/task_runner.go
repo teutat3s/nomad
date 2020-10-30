@@ -342,10 +342,6 @@ func NewTaskRunner(config *Config) (*TaskRunner, error) {
 	// Create the logger based on the allocation ID
 	tr.logger = config.Logger.Named("task_runner").With("task", config.Task.Name)
 
-	tr.logger.Info("SHIT %+v", config.Task.KillTimeout)
-	tr.logger.Info("HEAD %+v", config.ClientConfig.DefaultKillTimeout)
-	tr.logger.Info("RAWR %+v", tr.task)
-
 	// Pull out the task's resources
 	ares := tr.alloc.AllocatedResources
 	if ares == nil {
