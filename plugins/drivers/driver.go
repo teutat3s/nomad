@@ -474,12 +474,13 @@ type TaskStatus struct {
 }
 
 type TaskEvent struct {
-	TaskID      string
-	TaskName    string
-	AllocID     string
-	Timestamp   time.Time
-	Message     string
-	Annotations map[string]string
+	TaskID         string
+	TaskName       string
+	AllocID        string
+	Timestamp      time.Time
+	Message        string
+	DisplayMessage string
+	Annotations    map[string]string
 
 	// Err is only used if an error occurred while consuming the RPC stream
 	Err error
