@@ -1091,10 +1091,12 @@ func (ar *allocRunner) GetTaskEventHandler(taskName string) drivermanager.EventH
 	if tr, ok := ar.tasks[taskName]; ok {
 		return func(ev *drivers.TaskEvent) {
 			tr.EmitEvent(&structs.TaskEvent{
-				Type:          structs.TaskDriverMessage,
-				Time:          ev.Timestamp.UnixNano(),
-				Details:       ev.Annotations,
-				DriverMessage: ev.Message,
+				Type:           structs.TaskDriverMessage,
+				Time:           ev.Timestamp.UnixNano(),
+				Details:        ev.Annotations,
+				Message:        ev.Message,
+				DisplayMessage: ev.DisplayMessage,
+				DriverMessage:  ev.Message,
 			})
 		}
 	}

@@ -750,6 +750,9 @@ message DriverTaskEvent {
     // Message is the body of the event
     string message = 5;
 
+    // DisplayMessage is a human friendly message about the event
+    string display_message = 6;
+
     // Annotations allows for additional key/value data to be sent along with the event
-    map<string,string> annotations = 6;
+    map<string,string> annotations = 7;
 }
