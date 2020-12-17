@@ -398,7 +398,8 @@ func (a *allocReconciler) computeGroup(group string, all allocSet) bool {
 
 	// Create a structure for choosing names. Seed with the taken names which is
 	// the union of untainted and migrating nodes (includes canaries)
-	//FIXME(schmichael) does untainted need to include lost in its union now that lost allocs are replaced directly?
+	//FIXME(schmichael) does untainted need to include lost in its union
+	//                  now that lost allocs are replaced directly?
 	nameIndex := newAllocNameIndex(a.jobID, group, tg.Count, untainted.union(migrate, rescheduleNow))
 
 	// Stop any unneeded allocations and update the untainted set to not
@@ -453,9 +454,10 @@ func (a *allocReconciler) computeGroup(group string, all allocSet) bool {
 	// * Not placing any canaries
 	// * If there are any canaries that they have been promoted
 	// * There is no delayed stop_after_client_disconnect alloc, which delays scheduling for the whole group
+	// * An alloc was lost
 	var place []allocPlaceResult
 	if len(lostLater) == 0 {
-		place = a.computePlacements(tg, nameIndex, untainted, migrate, rescheduleNow, lost, canaryState)
+		place = a.computePlacements(tg, nameIndex, untainted, migrate, rescheduleNow, canaryState, lost)
 		if !existingDeployment {
 			dstate.DesiredTotal += len(place)
 		}
@@ -705,20 +707,21 @@ func (a *allocReconciler) computeLimit(group *structs.TaskGroup, untainted, dest
 }
 
 // computePlacement returns the set of allocations to place given the group
-// definition, the set of untainted, migrating, reschedule, and lost
-// allocations for the group.
+// definition, the set of untainted, migrating and reschedule allocations for the group.
 func (a *allocReconciler) computePlacements(group *structs.TaskGroup,
-	nameIndex *allocNameIndex, untainted, migrate allocSet, reschedule allocSet, lost allocSet, canaryState bool) []allocPlaceResult {
+	nameIndex *allocNameIndex, untainted, migrate allocSet, reschedule allocSet,
+	canaryState bool, lost allocSet) []allocPlaceResult {
 
 	// Add rescheduled placement results
 	var place []allocPlaceResult
 	for _, alloc := range reschedule {
 		place = append(place, allocPlaceResult{
-			name:               alloc.Name,
-			taskGroup:          group,
-			previousAlloc:      alloc,
-			reschedule:         true,
-			canary:             alloc.DeploymentStatus.IsCanary(),
+			name:          alloc.Name,
+			taskGroup:     group,
+			previousAlloc: alloc,
+			reschedule:    true,
+			canary:        alloc.DeploymentStatus.IsCanary(),
+
 			downgradeNonCanary: canaryState && !alloc.DeploymentStatus.IsCanary(),
 			minJobVersion:      alloc.Job.Version,
 			lost:               false,

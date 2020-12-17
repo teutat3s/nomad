@@ -7349,13 +7349,18 @@ type AllocState struct {
 	Time  time.Time
 }
 
-// TaskHandle is an optional handle to a task propogated to the servers for use
-// by remote tasks.
+// TaskHandle is  optional handle to a task propogated to the servers for use
+// by remote tasks. Since remote tasks are not implicitly lost when the node
+// they are assigned to is down, their state is migrated to the replacement
+// allocation.
 //
 //  Minimal set of fields from plugins/drivers/task_handle.go:TaskHandle
-//FIXME(schmichael) is the right name? right fields? go back to serializing it?
 type TaskHandle struct {
-	Version     int
+	// Version of driver state. Used by the driver to gracefully handle
+	// plugin upgrades.
+	Version int
+
+	// Driver-specific state containing a handle to the remote task.
 	DriverState []byte
 }
 
@@ -7364,12 +7369,12 @@ func (h *TaskHandle) Copy() *TaskHandle {
 		return nil
 	}
 
-	ds := make([]byte, len(h.DriverState))
-	copy(ds, h.DriverState)
-	return &TaskHandle{
+	newTH := TaskHandle{
 		Version:     h.Version,
-		DriverState: ds,
+		DriverState: make([]byte, len(h.DriverState)),
 	}
+	copy(newTH.DriverState, h.DriverState)
+	return &newTH
 }
 
 // Set of possible states for a task.
@@ -7406,9 +7411,8 @@ type TaskState struct {
 	// Series of task events that transition the state of the task.
 	Events []*TaskEvent
 
-	// TaskHandle is the encoded version of drivers.TaskHandle if a task
-	// wishes to propagate its handle to the server (as is the case with
-	// RemoteTasks).
+	// TaskHandle is based on drivers.TaskHandle and used by remote task
+	// drivers to migrate task handles between allocations.
 	TaskHandle *TaskHandle
 }
 

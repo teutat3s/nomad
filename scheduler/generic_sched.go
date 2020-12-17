@@ -607,11 +607,9 @@ func (s *GenericScheduler) computePlacements(destructive, place []placementResul
 						updateRescheduleTracker(alloc, prevAllocation, now)
 					}
 
-					//FIXME(schmichael) is this the right
-					//place to copy state? if so
-					//encapsulate in a func for easier
-					//testing
-					transferTaskState(s.logger, alloc, prevAllocation, missing.PreviousLost())
+					// If the allocation has task handles,
+					// migrate them to the new allocation
+					transferTaskState(alloc, prevAllocation, missing.PreviousLost())
 				}
 
 				// If we are placing a canary and we found a match, add the canary
@@ -655,7 +653,7 @@ func (s *GenericScheduler) computePlacements(destructive, place []placementResul
 //
 // The previous allocation will be marked as lost as part of this plan, so its
 // ClientStatus is not yet lost.
-func transferTaskState(logger hclog.Logger, alloc, prev *structs.Allocation, prevLost bool) {
+func transferTaskState(alloc, prev *structs.Allocation, prevLost bool) {
 	// Don't transfer state from client terminal allocs
 	if prev.ClientTerminalStatus() {
 		return

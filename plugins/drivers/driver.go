@@ -32,7 +32,11 @@ const (
 	// driver should take appropriate action to handle the old driver state.
 	Pre09TaskHandleVersion = 0
 
-	//FIXME(schmichael) Hack for remote task drivers, see remotetask_hook.go
+	// DetachSignal is a special signal sent to remote task drivers when a
+	// task should be detached instead of killed. This allows a remote task
+	// to be left running and transferred to a replacement allocation in
+	// cases like down or drained nodes causing the original allocation to
+	// be terminal.
 	DetachSignal = "DETACH"
 )
 
@@ -166,9 +170,6 @@ type Capabilities struct {
 	// instead of locally. The Nomad client and servers can use this
 	// information to adjust behavior such as propogating task handles
 	// between allocations to avoid downtime when a client is lost.
-	//
-	//FIXME(schmichael) Name doesn't feel like it matches the other
-	//capabilities. Perhaps just "Remote"?
 	RemoteTasks bool
 }
 

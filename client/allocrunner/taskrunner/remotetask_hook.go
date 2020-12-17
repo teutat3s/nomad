@@ -9,21 +9,10 @@ import (
 	"github.com/hashicorp/nomad/plugins/drivers"
 )
 
-//FIXME(schmichael) move and reuse for other hooks that disable themselves?
-type noopHook struct {
-	name string
-}
-
-func (h noopHook) Name() string {
-	return h.name
-}
-
 var _ interfaces.TaskPrestartHook = (*remoteTaskHook)(nil)
 var _ interfaces.TaskPreKillHook = (*remoteTaskHook)(nil)
 
 // remoteTaskHook reattaches to remotely executing tasks.
-//
-//FIXME(schmichael) super leaky abstraction with taskrunner
 type remoteTaskHook struct {
 	tr *TaskRunner
 
@@ -31,12 +20,6 @@ type remoteTaskHook struct {
 }
 
 func newRemoteTaskHook(tr *TaskRunner, logger hclog.Logger) interfaces.TaskHook {
-	//FIXME(schmichael) determine when driverCaps can be nil, does it need a lock?
-	if tr.driverCapabilities == nil || !tr.driverCapabilities.RemoteTasks {
-		tr.logger.Trace("not a remote task driver; disabling hook")
-		return noopHook{(*remoteTaskHook)(nil).Name()}
-	}
-
 	h := &remoteTaskHook{
 		tr: tr,
 	}
@@ -56,6 +39,7 @@ func (h *remoteTaskHook) Prestart(ctx context.Context, req *interfaces.TaskPrest
 		return nil
 	}
 
+	//TODO(schmichael) create better abstraction for retrieving task handle
 	h.tr.stateLock.Lock()
 	th := drivers.NewTaskHandleFromState(h.tr.state)
 	h.tr.stateLock.Unlock()

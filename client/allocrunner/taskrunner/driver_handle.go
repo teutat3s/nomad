@@ -39,8 +39,7 @@ func (h *DriverHandle) WaitCh(ctx context.Context) (<-chan *drivers.ExitResult, 
 	return h.driver.WaitTask(ctx, h.taskID)
 }
 
-//FIXME(schmichael) Hack to allow detaching remote task drivers
-//FIXME(schmichael) Probably needs locks
+// SetKillSignal allows overriding the signal sent to kill the task.
 func (h *DriverHandle) SetKillSignal(signal string) {
 	h.killSignal = signal
 }

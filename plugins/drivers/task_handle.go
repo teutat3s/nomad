@@ -47,7 +47,7 @@ func (h *TaskHandle) Copy() *TaskHandle {
 	return handle
 }
 
-// Store this TaskHandle on the TaskState.
+// Store this TaskHandle on the given TaskState.
 func (h *TaskHandle) Store(ts *structs.TaskState) {
 	if h == nil || len(h.DriverState) == 0 {
 		// No handle or state, clear existing state
@@ -70,10 +70,10 @@ func NewTaskHandleFromState(ts *structs.TaskState) *TaskHandle {
 		return nil
 	}
 
-	ds := make([]byte, len(ts.TaskHandle.DriverState))
-	copy(ds, ts.TaskHandle.DriverState)
-	return &TaskHandle{
+	th := TaskHandle{
 		Version:     ts.TaskHandle.Version,
-		DriverState: ds,
+		DriverState: make([]byte, len(ts.TaskHandle.DriverState)),
 	}
+	copy(th.DriverState, ts.TaskHandle.DriverState)
+	return &th
 }
