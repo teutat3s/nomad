@@ -16,20 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	// envConsulToken is the consul http token environment variable
-	envConsulToken = "CONSUL_HTTP_TOKEN"
-
-	// demoConnectJob is the example connect enabled job useful for testing
-	demoConnectJob = "connect/input/demo.nomad"
-
-	// demoConnectNativeJob is the example connect native enabled job useful for testing
-	demoConnectNativeJob = "connect/input/native-demo.nomad"
-
-	// demoConnectIngressGateway is the example ingress gateway job useful for testing
-	demoConnectIngressGateway = "connect/input/ingress-gateway.nomad"
-)
-
 type ConnectACLsE2ETest struct {
 	framework.TC
 
@@ -337,6 +323,35 @@ func (tc *ConnectACLsE2ETest) TestConnectACLsConnectIngressGatewayDemo(f *framew
 	f.Equal(1, foundSITokens["generate"], "expected 1 SI token for generate: %v", foundSITokens)
 
 	t.Log("connect ingress gateway job with ACLs enabled finished")
+}
+
+func (tc *ConnectACLsE2ETest) TestConnectACLsConnectTerminatingGatewayDemo(f *framework.F) {
+	t := f.T()
+
+	t.Log("test register Connect Terminating Gateway job w/ ACLs enabled")
+
+	// setup ACL policy and mint operator token
+
+	policyID := tc.createConsulPolicy(consulPolicy{
+		Name:  "nomad-operator-policy",
+		Rules: `service "api-gateway" { policy = "write" } service "count-dashboard" { policy = "write" }`,
+	}, f)
+	operatorToken := tc.createOperatorToken(policyID, f)
+	t.Log("created operator token:", operatorToken)
+
+	jobID := connectJobID()
+	tc.jobIDs = append(tc.jobIDs, jobID)
+
+	allocs := e2eutil.RegisterAndWaitForAllocs(t, tc.Nomad(), demoConnectTerminatingGateway, jobID, operatorToken)
+	allocIDs := e2eutil.AllocIDsFromAllocationListStubs(allocs)
+	e2eutil.WaitForAllocsRunning(t, tc.Nomad(), allocIDs)
+
+	foundSITokens := tc.countSITokens(t)
+	f.Equal(2, len(foundSITokens), "expected 2 SI tokens total: %v", foundSITokens)
+	f.Equal(1, foundSITokens["connect-terminating-api-gateway"], "expected 1 SI token for connect-terminating-api-gateway: %v", foundSITokens)
+	f.Equal(1, foundSITokens["connect-proxy-count-dashboard"], "expected 1 SI token for count-dashboard: %v", foundSITokens)
+
+	t.Log("connect terminating gateway job with ACLs enabled finished")
 }
 
 var (

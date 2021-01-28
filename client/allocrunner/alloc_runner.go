@@ -1140,6 +1140,9 @@ func (ar *allocRunner) Restart(ctx context.Context, event *structs.TaskEvent, fa
 	var err *multierror.Error
 	var errMutex sync.Mutex
 
+	// run alloc task restart hooks
+	ar.taskRestartHooks()
+
 	go func() {
 		var wg sync.WaitGroup
 		defer close(waitCh)
@@ -1171,6 +1174,9 @@ func (ar *allocRunner) Restart(ctx context.Context, event *structs.TaskEvent, fa
 // Returns any errors in a concatenated form.
 func (ar *allocRunner) RestartAll(taskEvent *structs.TaskEvent) error {
 	var err *multierror.Error
+
+	// run alloc task restart hooks
+	ar.taskRestartHooks()
 
 	for tn := range ar.tasks {
 		rerr := ar.RestartTask(tn, taskEvent.Copy())

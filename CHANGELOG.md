@@ -1,11 +1,29 @@
-## 1.0.2 (Unreleased)
+## 1.0.3 (Unreleased)
+
+FEATURES:
+ * **Terminating Gateways**: Adds built-in support for running Consul Connect terminating gateways [[GH-9829](https://github.com/hashicorp/nomad/pull/9829)]
+
+IMPROVEMENTS:
+ * consul/connect: Made handling of sidecar task container image URLs consistent with the `docker` task driver. [[GH-9580](https://github.com/hashicorp/nomad/issues/9580)]
+
+BUG FIXES:
+ * consul: Fixed a bug where failing tasks with group services would only cause the allocation to restart once instead of respecting the `restart` field. [[GH-9869](https://github.com/hashicorp/nomad/issues/9869)]
+ * consul/connect: Fixed a bug where gateway proxy connection default timeout not set [[GH-9851](https://github.com/hashicorp/nomad/pull/9851)]
+ * consul/connect: Fixed a bug preventing more than one connect gateway per Nomad client [[GH-9849](https://github.com/hashicorp/nomad/pull/9849)]
+ * scheduler: Fixed a bug where shared ports were not persisted during inplace updates for service jobs. [[GH-9830](https://github.com/hashicorp/nomad/issues/9830)]
+ * scheduler: Fixed a bug where job statuses and summaries where duplicated and miscalculated when registering a job. [[GH-9768](https://github.com/hashicorp/nomad/issues/9768)]
+ * driver/qemu: Fixed a bug where network namespaces were not supported for QEMU workloads [[GH-9861](https://github.com/hashicorp/nomad/pull/9861)]
+
+## 1.0.2 (January 14, 2021)
 
 IMPROVEMENTS:
  * artifact: Added support for virtual host style AWS S3 paths. [[GH-9050](https://github.com/hashicorp/nomad/issues/9050)]
  * build: Updated to Go 1.15.6. [[GH-9686](https://github.com/hashicorp/nomad/issues/9686)]
  * client: Improve support for AWS Graviton instances [[GH-7989](https://github.com/hashicorp/nomad/issues/7989)]
  * consul/connect: Interpolate the connect, service meta, and service canary meta blocks with the task environment [[GH-9586](https://github.com/hashicorp/nomad/pull/9586)]
+ * consul/connect: enable configuring custom gateway task [[GH-9639](https://github.com/hashicorp/nomad/pull/9639)]
  * cli: Added JSON/go template formatting to agent-info command. [[GH-9788](https://github.com/hashicorp/nomad/pull/9788)]
+
 
 BUG FIXES:
  * client: Fixed a bug where non-`docker` tasks with network isolation were restarted on client restart. [[GH-9757](https://github.com/hashicorp/nomad/issues/9757)]
@@ -20,7 +38,7 @@ BUG FIXES:
  * template: Fixed multiple issues in template src/dest and artifact dest interpolation [[GH-9671](https://github.com/hashicorp/nomad/issues/9671)]
  * template: Fixed a bug where dynamic secrets did not trigger the template `change_mode` after a client restart. [[GH-9636](https://github.com/hashicorp/nomad/issues/9636)]
  * scaling: Fixed a bug where job scaling endpoint did not enforce scaling policy min/max [[GH-9761](https://github.com/hashicorp/nomad/issues/9761)]
- * server: Fixed a bug where new servers may bootstrap prematurely when configured with `bootstrap_expect = 0`.
+ * server: Fixed a bug where new servers may bootstrap prematurely when configured with `bootstrap_expect = 0` [[GH-9672](https://github.com/hashicorp/nomad/issues/9672)]
  * ui: The topology visualization will now render a subset of nodes instead of nothing when some nodes are running nomad <0.9.0 [[GH-9733](https://github.com/hashicorp/nomad/issues/9733)]
 
 ## 1.0.1 (December 16, 2020)

@@ -1659,6 +1659,7 @@ func TestStateStore_UpsertJob_ChildJob(t *testing.T) {
 	}
 
 	child := mock.Job()
+	child.Status = ""
 	child.ParentID = parent.ID
 	if err := state.UpsertJob(structs.MsgTypeTestSetup, 1001, child); err != nil {
 		t.Fatalf("err: %v", err)
@@ -1996,6 +1997,7 @@ func TestStateStore_DeleteJob_ChildJob(t *testing.T) {
 	}
 
 	child := mock.Job()
+	child.Status = ""
 	child.ParentID = parent.ID
 
 	if err := state.UpsertJob(structs.MsgTypeTestSetup, 999, child); err != nil {
@@ -4022,6 +4024,7 @@ func TestStateStore_UpsertEvals_Eval_ChildJob(t *testing.T) {
 	}
 
 	child := mock.Job()
+	child.Status = ""
 	child.ParentID = parent.ID
 
 	if err := state.UpsertJob(structs.MsgTypeTestSetup, 999, child); err != nil {
@@ -4246,6 +4249,7 @@ func TestStateStore_DeleteEval_ChildJob(t *testing.T) {
 	}
 
 	child := mock.Job()
+	child.Status = ""
 	child.ParentID = parent.ID
 
 	if err := state.UpsertJob(structs.MsgTypeTestSetup, 999, child); err != nil {
@@ -4498,6 +4502,7 @@ func TestStateStore_UpdateAllocsFromClient(t *testing.T) {
 	}
 
 	child := mock.Job()
+	child.Status = ""
 	child.ParentID = parent.ID
 	if err := state.UpsertJob(structs.MsgTypeTestSetup, 999, child); err != nil {
 		t.Fatalf("err: %v", err)
@@ -5017,16 +5022,13 @@ func TestStateStore_UpsertAlloc_ChildJob(t *testing.T) {
 	state := testStateStore(t)
 
 	parent := mock.Job()
-	if err := state.UpsertJob(structs.MsgTypeTestSetup, 998, parent); err != nil {
-		t.Fatalf("err: %v", err)
-	}
+	require.NoError(t, state.UpsertJob(structs.MsgTypeTestSetup, 998, parent))
 
 	child := mock.Job()
+	child.Status = ""
 	child.ParentID = parent.ID
 
-	if err := state.UpsertJob(structs.MsgTypeTestSetup, 999, child); err != nil {
-		t.Fatalf("err: %v", err)
-	}
+	require.NoError(t, state.UpsertJob(structs.MsgTypeTestSetup, 999, child))
 
 	alloc := mock.Alloc()
 	alloc.JobID = child.ID
@@ -5034,40 +5036,27 @@ func TestStateStore_UpsertAlloc_ChildJob(t *testing.T) {
 
 	// Create watchsets so we can test that delete fires the watch
 	ws := memdb.NewWatchSet()
-	if _, err := state.JobSummaryByID(ws, parent.Namespace, parent.ID); err != nil {
-		t.Fatalf("bad: %v", err)
-	}
+	_, err := state.JobSummaryByID(ws, parent.Namespace, parent.ID)
+	require.NoError(t, err)
 
-	err := state.UpsertAllocs(structs.MsgTypeTestSetup, 1000, []*structs.Allocation{alloc})
-	if err != nil {
-		t.Fatalf("err: %v", err)
-	}
+	err = state.UpsertAllocs(structs.MsgTypeTestSetup, 1000, []*structs.Allocation{alloc})
+	require.NoError(t, err)
 
-	if !watchFired(ws) {
-		t.Fatalf("bad")
-	}
+	require.True(t, watchFired(ws))
 
 	ws = memdb.NewWatchSet()
 	summary, err := state.JobSummaryByID(ws, parent.Namespace, parent.ID)
-	if err != nil {
-		t.Fatalf("err: %v", err)
-	}
-	if summary == nil {
-		t.Fatalf("nil summary")
-	}
-	if summary.JobID != parent.ID {
-		t.Fatalf("bad summary id: %v", parent.ID)
-	}
-	if summary.Children == nil {
-		t.Fatalf("nil children summary")
-	}
-	if summary.Children.Pending != 0 || summary.Children.Running != 1 || summary.Children.Dead != 0 {
-		t.Fatalf("bad children summary: %v", summary.Children)
-	}
+	require.NoError(t, err)
+	require.NotNil(t, summary)
 
-	if watchFired(ws) {
-		t.Fatalf("bad")
-	}
+	require.Equal(t, parent.ID, summary.JobID)
+	require.NotNil(t, summary.Children)
+
+	require.Equal(t, int64(0), summary.Children.Pending)
+	require.Equal(t, int64(1), summary.Children.Running)
+	require.Equal(t, int64(0), summary.Children.Dead)
+
+	require.False(t, watchFired(ws))
 }
 
 func TestStateStore_UpdateAlloc_Alloc(t *testing.T) {
@@ -6839,32 +6828,20 @@ func TestStateStore_UpdateJobStability(t *testing.T) {
 
 	// Insert a job twice to get two versions
 	job := mock.Job()
-	if err := state.UpsertJob(structs.MsgTypeTestSetup, 1, job); err != nil {
-		t.Fatalf("bad: %v", err)
-	}
+	require.NoError(t, state.UpsertJob(structs.MsgTypeTestSetup, 1, job))
 
-	if err := state.UpsertJob(structs.MsgTypeTestSetup, 2, job); err != nil {
-		t.Fatalf("bad: %v", err)
-	}
+	require.NoError(t, state.UpsertJob(structs.MsgTypeTestSetup, 2, job.Copy()))
 
 	// Update the stability to true
 	err := state.UpdateJobStability(3, job.Namespace, job.ID, 0, true)
-	if err != nil {
-		t.Fatalf("bad: %v", err)
-	}
+	require.NoError(t, err)
 
 	// Check that the job was updated properly
 	ws := memdb.NewWatchSet()
-	jout, _ := state.JobByIDAndVersion(ws, job.Namespace, job.ID, 0)
-	if err != nil {
-		t.Fatalf("bad: %v", err)
-	}
-	if jout == nil {
-		t.Fatalf("bad: %#v", jout)
-	}
-	if !jout.Stable {
-		t.Fatalf("job not marked stable %#v", jout)
-	}
+	jout, err := state.JobByIDAndVersion(ws, job.Namespace, job.ID, 0)
+	require.NoError(t, err)
+	require.NotNil(t, jout)
+	require.True(t, jout.Stable, "job not marked as stable")
 
 	// Update the stability to false
 	err = state.UpdateJobStability(3, job.Namespace, job.ID, 0, false)
@@ -6873,16 +6850,10 @@ func TestStateStore_UpdateJobStability(t *testing.T) {
 	}
 
 	// Check that the job was updated properly
-	jout, _ = state.JobByIDAndVersion(ws, job.Namespace, job.ID, 0)
-	if err != nil {
-		t.Fatalf("bad: %v", err)
-	}
-	if jout == nil {
-		t.Fatalf("bad: %#v", jout)
-	}
-	if jout.Stable {
-		t.Fatalf("job marked stable %#v", jout)
-	}
+	jout, err = state.JobByIDAndVersion(ws, job.Namespace, job.ID, 0)
+	require.NoError(t, err)
+	require.NotNil(t, jout)
+	require.False(t, jout.Stable)
 }
 
 // Test that nonexistent deployment can't be promoted

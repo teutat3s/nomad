@@ -662,6 +662,8 @@ func (d *Driver) SetConfig(c *base.Config) error {
 	}
 
 	d.config = &config
+	d.config.InfraImage = strings.TrimPrefix(d.config.InfraImage, "https://")
+
 	if len(d.config.GC.ImageDelay) > 0 {
 		dur, err := time.ParseDuration(d.config.GC.ImageDelay)
 		if err != nil {

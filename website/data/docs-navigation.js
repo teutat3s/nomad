@@ -241,7 +241,7 @@ export default [
               {
                 category: 'datetime',
                 name: 'Date and Time Functions',
-                content: ['formatdate', 'timeadd', 'timestamp'],
+                content: ['formatdate', 'timeadd'],
               },
               {
                 category: 'encoding',
@@ -397,7 +397,15 @@ export default [
   },
   {
     category: 'devices',
-    content: ['nvidia', 'community'],
+    content: [
+      'nvidia',
+      {
+        category: 'external',
+        content: [
+          'usb'
+        ]
+      }
+    ],
   },
   'schedulers',
   { category: 'runtime', content: ['environment', 'interpolation'] },

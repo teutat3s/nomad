@@ -875,7 +875,8 @@ func ConnectIngressGatewayJob(mode string, inject bool) *structs.Job {
 		Connect: &structs.ConsulConnect{
 			Gateway: &structs.ConsulGateway{
 				Proxy: &structs.ConsulGatewayProxy{
-					ConnectTimeout: helper.TimeToPtr(3 * time.Second),
+					ConnectTimeout:            helper.TimeToPtr(3 * time.Second),
+					EnvoyGatewayBindAddresses: make(map[string]*structs.ConsulGatewayBindAddress),
 				},
 				Ingress: &structs.ConsulIngressConfigEntry{
 					Listeners: []*structs.ConsulIngressListener{{
@@ -1256,9 +1257,7 @@ func BatchConnectJob() *structs.Job {
 		ModifyIndex:    99,
 		JobModifyIndex: 99,
 	}
-	if err := job.Canonicalize(); err != nil {
-		panic(err)
-	}
+	job.Canonicalize()
 	return job
 }
 

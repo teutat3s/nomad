@@ -10,7 +10,7 @@ job "drain_deadline" {
     task "task" {
       driver = "docker"
 
-      kill_timeout = "30s"
+      kill_timeout = "2m"
 
       config {
         image   = "busybox:1"
