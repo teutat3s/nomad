@@ -65,7 +65,7 @@ endif
 		GOOS=$(firstword $(subst _, ,$*)) \
 		GOARCH=$(lastword $(subst _, ,$*)) \
 		CC=$(CC) \
-		go build -trimpath -ldflags $(GO_LDFLAGS) -tags "$(GO_TAGS)" -o $(GO_OUT)
+		go build -trimpath -ldflags $(GO_LDFLAGS) -mod=mod -tags "$(GO_TAGS)" -o $(GO_OUT)
 
 pkg/linux_arm/nomad: CC = arm-linux-gnueabihf-gcc-5
 pkg/linux_arm64/nomad: CC = aarch64-linux-gnu-gcc-5
