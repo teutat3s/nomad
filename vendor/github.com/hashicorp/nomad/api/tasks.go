@@ -681,6 +681,7 @@ func (t *Task) Canonicalize(tg *TaskGroup, job *Job) {
 	}
 	t.Resources.Canonicalize()
 
+	// We set this via the client config.
 	if t.KillTimeout == nil {
 		t.KillTimeout = timeToPtr(0)
 	}

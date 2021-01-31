@@ -218,26 +218,29 @@ func (m *manager) Apply(pid int) (err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var c = m.cgroups
-
-	d, err := getCgroupData(m.cgroups, pid)
-	if err != nil {
-		return err
+	c := m.cgroups
+	if c.Resources.Unified != nil {
+		return cgroups.ErrV1NoUnified
 	}
 
 	m.paths = make(map[string]string)
 	if c.Paths != nil {
+		cgMap, err := cgroups.ParseCgroupFile("/proc/self/cgroup")
+		if err != nil {
+			return err
+		}
 		for name, path := range c.Paths {
-			_, err := d.path(name)
-			if err != nil {
-				if cgroups.IsNotFound(err) {
-					continue
-				}
-				return err
+			// XXX(kolyshkin@): why this check is needed?
+			if _, ok := cgMap[name]; ok {
+				m.paths[name] = path
 			}
-			m.paths[name] = path
 		}
 		return cgroups.EnterPid(m.paths, pid)
+	}
+
+	d, err := getCgroupData(m.cgroups, pid)
+	if err != nil {
+		return err
 	}
 
 	for _, sys := range subsystems {
@@ -274,11 +277,7 @@ func (m *manager) Destroy() error {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if err := cgroups.RemovePaths(m.paths); err != nil {
-		return err
-	}
-	m.paths = make(map[string]string)
-	return nil
+	return cgroups.RemovePaths(m.paths)
 }
 
 func (m *manager) Path(subsys string) string {
@@ -312,6 +311,9 @@ func (m *manager) Set(container *configs.Config) error {
 	// and there is no need to set any values.
 	if m.cgroups != nil && m.cgroups.Paths != nil {
 		return nil
+	}
+	if container.Cgroups.Resources.Unified != nil {
+		return cgroups.ErrV1NoUnified
 	}
 
 	m.mu.Lock()
@@ -423,16 +425,6 @@ func join(path string, pid int) error {
 		return err
 	}
 	return cgroups.WriteCgroupProc(path, pid)
-}
-
-func removePath(p string, err error) error {
-	if err != nil {
-		return err
-	}
-	if p != "" {
-		return os.RemoveAll(p)
-	}
-	return nil
 }
 
 func (m *manager) GetPaths() map[string]string {

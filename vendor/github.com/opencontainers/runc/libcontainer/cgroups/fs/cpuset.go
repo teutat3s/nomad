@@ -3,10 +3,11 @@
 package fs
 
 import (
-	"bytes"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/moby/sys/mountinfo"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
@@ -41,7 +42,106 @@ func (s *CpusetGroup) Set(path string, cgroup *configs.Cgroup) error {
 	return nil
 }
 
+func getCpusetStat(path string, filename string) ([]uint16, error) {
+	var extracted []uint16
+	fileContent, err := fscommon.GetCgroupParamString(path, filename)
+	if err != nil {
+		return extracted, err
+	}
+	if len(fileContent) == 0 {
+		return extracted, fmt.Errorf("%s found to be empty", filepath.Join(path, filename))
+	}
+
+	for _, s := range strings.Split(fileContent, ",") {
+		splitted := strings.SplitN(s, "-", 3)
+		switch len(splitted) {
+		case 3:
+			return extracted, fmt.Errorf("invalid values in %s", filepath.Join(path, filename))
+		case 2:
+			min, err := strconv.ParseUint(splitted[0], 10, 16)
+			if err != nil {
+				return extracted, err
+			}
+			max, err := strconv.ParseUint(splitted[1], 10, 16)
+			if err != nil {
+				return extracted, err
+			}
+			if min > max {
+				return extracted, fmt.Errorf("invalid values in %s", filepath.Join(path, filename))
+			}
+			for i := min; i <= max; i++ {
+				extracted = append(extracted, uint16(i))
+			}
+		case 1:
+			value, err := strconv.ParseUint(s, 10, 16)
+			if err != nil {
+				return extracted, err
+			}
+			extracted = append(extracted, uint16(value))
+		}
+	}
+
+	return extracted, nil
+}
+
 func (s *CpusetGroup) GetStats(path string, stats *cgroups.Stats) error {
+	var err error
+
+	stats.CPUSetStats.CPUs, err = getCpusetStat(path, "cpuset.cpus")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.CPUExclusive, err = fscommon.GetCgroupParamUint(path, "cpuset.cpu_exclusive")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.Mems, err = getCpusetStat(path, "cpuset.mems")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.MemHardwall, err = fscommon.GetCgroupParamUint(path, "cpuset.mem_hardwall")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.MemExclusive, err = fscommon.GetCgroupParamUint(path, "cpuset.mem_exclusive")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.MemoryMigrate, err = fscommon.GetCgroupParamUint(path, "cpuset.memory_migrate")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.MemorySpreadPage, err = fscommon.GetCgroupParamUint(path, "cpuset.memory_spread_page")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.MemorySpreadSlab, err = fscommon.GetCgroupParamUint(path, "cpuset.memory_spread_slab")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.MemoryPressure, err = fscommon.GetCgroupParamUint(path, "cpuset.memory_pressure")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.SchedLoadBalance, err = fscommon.GetCgroupParamUint(path, "cpuset.sched_load_balance")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	stats.CPUSetStats.SchedRelaxDomainLevel, err = fscommon.GetCgroupParamInt(path, "cpuset.sched_relax_domain_level")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
 	return nil
 }
 
@@ -81,7 +181,7 @@ func (s *CpusetGroup) ApplyDir(dir string, cgroup *configs.Cgroup, pid int) erro
 	// 'ensureParent' start with parent because we don't want to
 	// explicitly inherit from parent, it could conflict with
 	// 'cpuset.cpu_exclusive'.
-	if err := s.ensureParent(filepath.Dir(dir), root); err != nil {
+	if err := cpusetEnsureParent(filepath.Dir(dir), root); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -103,20 +203,20 @@ func (s *CpusetGroup) ApplyDir(dir string, cgroup *configs.Cgroup, pid int) erro
 	return cgroups.WriteCgroupProc(dir, pid)
 }
 
-func (s *CpusetGroup) getSubsystemSettings(parent string) (cpus []byte, mems []byte, err error) {
-	if cpus, err = ioutil.ReadFile(filepath.Join(parent, "cpuset.cpus")); err != nil {
+func getCpusetSubsystemSettings(parent string) (cpus, mems string, err error) {
+	if cpus, err = fscommon.ReadFile(parent, "cpuset.cpus"); err != nil {
 		return
 	}
-	if mems, err = ioutil.ReadFile(filepath.Join(parent, "cpuset.mems")); err != nil {
+	if mems, err = fscommon.ReadFile(parent, "cpuset.mems"); err != nil {
 		return
 	}
 	return cpus, mems, nil
 }
 
-// ensureParent makes sure that the parent directory of current is created
+// cpusetEnsureParent makes sure that the parent directory of current is created
 // and populated with the proper cpus and mems files copied from
-// it's parent.
-func (s *CpusetGroup) ensureParent(current, root string) error {
+// its parent.
+func cpusetEnsureParent(current, root string) error {
 	parent := filepath.Dir(current)
 	if libcontainerUtils.CleanPath(parent) == root {
 		return nil
@@ -125,37 +225,33 @@ func (s *CpusetGroup) ensureParent(current, root string) error {
 	if parent == current {
 		return errors.New("cpuset: cgroup parent path outside cgroup root")
 	}
-	if err := s.ensureParent(parent, root); err != nil {
+	if err := cpusetEnsureParent(parent, root); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(current, 0755); err != nil {
 		return err
 	}
-	return s.copyIfNeeded(current, parent)
+	return cpusetCopyIfNeeded(current, parent)
 }
 
-// copyIfNeeded copies the cpuset.cpus and cpuset.mems from the parent
+// cpusetCopyIfNeeded copies the cpuset.cpus and cpuset.mems from the parent
 // directory to the current directory if the file's contents are 0
-func (s *CpusetGroup) copyIfNeeded(current, parent string) error {
-	var (
-		err                      error
-		currentCpus, currentMems []byte
-		parentCpus, parentMems   []byte
-	)
-
-	if currentCpus, currentMems, err = s.getSubsystemSettings(current); err != nil {
+func cpusetCopyIfNeeded(current, parent string) error {
+	currentCpus, currentMems, err := getCpusetSubsystemSettings(current)
+	if err != nil {
 		return err
 	}
-	if parentCpus, parentMems, err = s.getSubsystemSettings(parent); err != nil {
+	parentCpus, parentMems, err := getCpusetSubsystemSettings(parent)
+	if err != nil {
 		return err
 	}
 
-	if s.isEmpty(currentCpus) {
+	if isEmptyCpuset(currentCpus) {
 		if err := fscommon.WriteFile(current, "cpuset.cpus", string(parentCpus)); err != nil {
 			return err
 		}
 	}
-	if s.isEmpty(currentMems) {
+	if isEmptyCpuset(currentMems) {
 		if err := fscommon.WriteFile(current, "cpuset.mems", string(parentMems)); err != nil {
 			return err
 		}
@@ -163,13 +259,13 @@ func (s *CpusetGroup) copyIfNeeded(current, parent string) error {
 	return nil
 }
 
-func (s *CpusetGroup) isEmpty(b []byte) bool {
-	return len(bytes.Trim(b, "\n")) == 0
+func isEmptyCpuset(str string) bool {
+	return str == "" || str == "\n"
 }
 
 func (s *CpusetGroup) ensureCpusAndMems(path string, cgroup *configs.Cgroup) error {
 	if err := s.Set(path, cgroup); err != nil {
 		return err
 	}
-	return s.copyIfNeeded(path, filepath.Dir(path))
+	return cpusetCopyIfNeeded(path, filepath.Dir(path))
 }

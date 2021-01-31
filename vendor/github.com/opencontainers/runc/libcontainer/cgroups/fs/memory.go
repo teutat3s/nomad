@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -160,7 +159,7 @@ func (s *MemoryGroup) Set(path string, cgroup *configs.Cgroup) error {
 
 func (s *MemoryGroup) GetStats(path string, stats *cgroups.Stats) error {
 	// Set stats from memory.stat.
-	statsFile, err := os.Open(filepath.Join(path, "memory.stat"))
+	statsFile, err := fscommon.OpenFile(path, "memory.stat", os.O_RDONLY)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil
@@ -200,8 +199,7 @@ func (s *MemoryGroup) GetStats(path string, stats *cgroups.Stats) error {
 	}
 	stats.MemoryStats.KernelTCPUsage = kernelTCPUsage
 
-	useHierarchy := strings.Join([]string{"memory", "use_hierarchy"}, ".")
-	value, err := fscommon.GetCgroupParamUint(path, useHierarchy)
+	value, err := fscommon.GetCgroupParamUint(path, "memory.use_hierarchy")
 	if err != nil {
 		return err
 	}
@@ -233,12 +231,14 @@ func getMemoryData(path, name string) (cgroups.MemoryData, error) {
 
 	moduleName := "memory"
 	if name != "" {
-		moduleName = strings.Join([]string{"memory", name}, ".")
+		moduleName = "memory." + name
 	}
-	usage := strings.Join([]string{moduleName, "usage_in_bytes"}, ".")
-	maxUsage := strings.Join([]string{moduleName, "max_usage_in_bytes"}, ".")
-	failcnt := strings.Join([]string{moduleName, "failcnt"}, ".")
-	limit := strings.Join([]string{moduleName, "limit_in_bytes"}, ".")
+	var (
+		usage    = moduleName + ".usage_in_bytes"
+		maxUsage = moduleName + ".max_usage_in_bytes"
+		failcnt  = moduleName + ".failcnt"
+		limit    = moduleName + ".limit_in_bytes"
+	)
 
 	value, err := fscommon.GetCgroupParamUint(path, usage)
 	if err != nil {
@@ -279,7 +279,7 @@ func getMemoryData(path, name string) (cgroups.MemoryData, error) {
 func getPageUsageByNUMA(cgroupPath string) (cgroups.PageUsageByNUMA, error) {
 	stats := cgroups.PageUsageByNUMA{}
 
-	file, err := os.Open(path.Join(cgroupPath, cgroupMemoryPagesByNuma))
+	file, err := fscommon.OpenFile(cgroupPath, cgroupMemoryPagesByNuma, os.O_RDONLY)
 	if os.IsNotExist(err) {
 		return stats, nil
 	} else if err != nil {
