@@ -29,12 +29,7 @@ else
 endif
 
 ifeq (Linux,$(THIS_OS))
-ALL_TARGETS = linux_386 \
-	linux_amd64 \
-	linux_arm \
-	linux_arm64 \
-	windows_386 \
-	windows_amd64
+ALL_TARGETS = linux_amd64
 endif
 
 ifeq (s390x,$(THIS_ARCH))
@@ -236,7 +231,7 @@ prerelease: GO_TAGS=ui codegen_generated release
 prerelease: generate-all ember-dist static-assets ## Generate all the static assets for a Nomad release
 
 .PHONY: release
-release: GO_TAGS=ui codegen_generated release
+release: GO_TAGS=ui codegen_generated release nonvidia
 release: clean $(foreach t,$(ALL_TARGETS),pkg/$(t).zip) ## Build all release packages which can be built on this platform.
 	@echo "==> Results:"
 	@tree --dirsfirst $(PROJECT_ROOT)/pkg
